@@ -2,7 +2,6 @@
 
 #include "myRTSGameMode.h"
 #include "myRTSPlayerController.h"
-#include "myRTSCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 
 AmyRTSGameMode::AmyRTSGameMode()

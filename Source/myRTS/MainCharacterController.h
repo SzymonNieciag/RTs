@@ -10,6 +10,19 @@
 /**
  * 
  */
+UENUM(BlueprintType)
+enum class ETeamType :uint8
+{
+	Red = 0 UMETA(DisplayName = "Red"),
+	Blue = 1 UMETA(DisplayName = "Blue"),
+	Teal = 2 UMETA(DisplayName = "Teal"),
+	Purple = 3 UMETA(DisplayName = "Purple"),
+	Yellow = 4 UMETA(DisplayName = "Yellow"),
+	Orange = 5 UMETA(DisplayName = "Orange"),
+	Green = 6 UMETA(DisplayName = "Green"),
+	LightPink = 7 UMETA(DisplayName = "Light Pink"),
+};
+
 UCLASS()
 class MYRTS_API AMainCharacterController : public AAIController
 {
@@ -17,23 +30,24 @@ class MYRTS_API AMainCharacterController : public AAIController
 	
 public: 
 
-	AMainCharacterController();
+	AMainCharacterController(const FObjectInitializer& ObjectInitializer);
 
 	virtual void BeginPlay()override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Config")
-		UBlackboardComponent *BlackboardComp;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Config")
-		UBehaviorTreeComponent *BehaviorTreeComp;
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Config")
+	//	UBehaviorTreeComponent *BehaviorTreeComp;
 
 	virtual void OnPossess(APawn* InPawn)override;
 
 	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)override;
 
+	virtual void OnBeginMovement();
+
+	virtual bool RunBehaviorTree(UBehaviorTree* BTAsset) override;
+
 private:
 
-		FGenericTeamId AITeamID;
+	FGenericTeamId AITeamID;
 
 public:
 
@@ -44,3 +58,24 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "AI")
 	virtual FGenericTeamId GetGenericTeamId()const override;
 };
+
+//AAIControllerBase();
+//virtual void OnPossess(APawn* InPawn)override;
+//
+//private:
+//
+//	UPROPERTY(EditAnywhere, Category = "AI")
+//		FTeamProperties TeamProperties;
+//
+//public:
+//	UFUNCTION(BlueprintCallable, Category = "AI")
+//		virtual void SetTeamProperties(const FTeamProperties TeamProp);
+//
+//	/*UFUNCTION()
+//	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID);
+//	*/
+//	/** Retrieve team identifier in form of FGenericTeamId */
+//	UFUNCTION(BlueprintCallable, Category = "AI")
+//		virtual FTeamProperties GetTeamProperties()const;
+//
+//	ETeamAttitude::Type GetTeamAttitudeTowards(const AActor & Other) const override; do aiperception

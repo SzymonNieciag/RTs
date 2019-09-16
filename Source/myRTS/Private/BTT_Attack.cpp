@@ -26,9 +26,10 @@ EBTNodeResult::Type UBTT_Attack::ExecuteTask(UBehaviorTreeComponent & OwnerComp,
 		if (Object!=nullptr)
 		{
 			AActor *Actor = Cast<AActor>(Object);
-
-			ICanBeDamaged::Execute_SetDamage(Object, MainCharacter->Attack, MainCharacter);
-
+			if (ICanBeDamaged* TheInterface = Cast<ICanBeDamaged>(Actor))
+			{
+				ICanBeDamaged::Execute_SetDamage(Actor,10, OwnerPawn);
+			}
 			DrawDebugLine(GetWorld(), MainCharacter->GetActorLocation(), Actor->GetActorLocation(), FColor::Green, false, 1, 0, 1);
 			return EBTNodeResult::Succeeded;
 		}

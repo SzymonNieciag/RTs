@@ -6,10 +6,11 @@
 #include "GameFramework/Character.h"
 #include "CanBeDamaged.h"
 #include <BehaviorTree/BehaviorTree.h>
+#include "IsSelectable.h"
 #include "MainCharacter.generated.h"
 
 UCLASS()
-class MYRTS_API AMainCharacter : public ACharacter, public ICanBeDamaged
+class MYRTS_API AMainCharacter : public ACharacter, public ICanBeDamaged, public IIsSelectable
 {
 	GENERATED_BODY()
 
@@ -17,11 +18,14 @@ public:
 	// Sets default values for this character's properties
 	AMainCharacter();
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category = "Mesh")
-	UStaticMeshComponent *MainMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Mesh")
+		UStaticMeshComponent *MainMesh;
 
 	UPROPERTY(EditDefaultsOnly)
-		UBehaviorTree* BehaviorTree;
+		UBehaviorTree *BehaviorTree;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Squad")
+		class AUnitsSquad *UnitsSquad;
 
 	UPROPERTY(EditAnywhere, Category = "Stat")
 		float Healt = 100;
@@ -45,10 +49,22 @@ public:
 		void SetDamage(float Damage, AActor* DamageCauser);
 	virtual void SetDamage_Implementation(float Damage, AActor* DamageCauser) override;
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Decal")
+		void EnableDecalEffect();
+	virtual void EnableDecalEffect_Implementation() override;
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Decal")
+		void DisableDecalEffect();
+	virtual void DisableDecalEffect_Implementation() override;
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	virtual void Destroyed() override;
+
+	//FORCEINLINE class UDecalComponent* GetCursorToWorld() { return CursorToWorld; }
 
 };

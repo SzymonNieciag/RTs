@@ -28,24 +28,22 @@ protected:
 
 public:
 
+	float ViewRange = 2000;
 	/** called when auxiliary node becomes active
 	* this function should be considered as const (don't modify state of object) if node is not instanced! */
-	virtual void OnBecomeRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)override;
+	virtual void OnBecomeRelevant(UBehaviorTreeComponent &OwnerComp, uint8 *NodeMemory) override;
 
 	/** called when auxiliary node becomes inactive
 	* this function should be considered as const (don't modify state of object) if node is not instanced! */
-	virtual void OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)override;
+	virtual void OnCeaseRelevant(UBehaviorTreeComponent &OwnerComp, uint8 *NodeMemory)override;
 
-	virtual void OnSearchStart(FBehaviorTreeSearchData& SearchData)override;
+	virtual void OnSearchStart(FBehaviorTreeSearchData &SearchData)override;
 
-	virtual void TickNode(UBehaviorTreeComponent & OwnerComp, uint8 * NodeMemory, float DeltaSeconds) override;
+	virtual void TickNode(UBehaviorTreeComponent &OwnerComp, uint8 *NodeMemory, float DeltaSeconds) override;
 
-	void GetAllEnemiesInRange(UBehaviorTreeComponent &OwnerComp, TArray<AActor*>& OutActors,float Range);
+	void GetAllEnemiesInRange(UBehaviorTreeComponent &OwnerComp, TArray<AActor*> &OutActors, float Range);
 
 	AActor* GetClosestEnemy(UBehaviorTreeComponent &OwnerComp);
 
-	virtual void InitializeFromAsset(UBehaviorTree & Asset) override;
-
-private:
-	float ViewRange = 2000;
+	virtual void InitializeFromAsset(UBehaviorTree &Asset) override;
 };

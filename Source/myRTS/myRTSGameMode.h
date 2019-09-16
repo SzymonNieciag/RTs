@@ -12,7 +12,11 @@ class AmyRTSGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
+
 	AmyRTSGameMode();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Units")
+	TArray<AActor*> AllPawns;
 };
 
 

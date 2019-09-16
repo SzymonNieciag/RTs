@@ -1,0 +1,6 @@
+*.db
+.vs/
+Binaries/Win64/myRTSEditor.target
+Binaries/
+Intermediate/
+Saved/

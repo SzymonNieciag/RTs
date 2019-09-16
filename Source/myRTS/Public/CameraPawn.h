@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
 #include <GameFramework/PlayerController.h>
+#include <GameFramework/DefaultPawn.h>
 #include "CameraPawn.generated.h"
 
 UCLASS()
-class MYRTS_API ACameraPawn : public APawn
+class MYRTS_API ACameraPawn : public ADefaultPawn
 {
 	GENERATED_BODY()
 
@@ -29,30 +29,27 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
 public:
-	/** Top down camera */
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-		class USceneComponent* RootScene;
-	/** Top down camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-		class UCameraComponent* TopDownCameraComponent;
+	class UCameraComponent* TopDownCameraComponent;
 
 	/** Camera boom positioning the camera above the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-		class USpringArmComponent* CameraBoom;
+	class USpringArmComponent* CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-	    APlayerController* PlayerController;
+	APlayerController* PlayerController;
 
-	UFUNCTION()
-		FVector GetCameraPawnDirection();
+	void Zoom(float Val);
+	void MoveForward(float Val) override;
+	void MoveRight(float Val) override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)
-		float Margin = 15;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (UIMin = "0.0", UIMax = "25.0"))
+	float MoveSpeed;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)
-	int32 ScreenSizeX;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (UIMin = "0.0", UIMax = "100.0"))
+	float ScreenEdgeZonePercent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)
-	int32 ScreenSizeY;
-
+	bool MoveForwardKeyboard = false;
+	bool MoveRightKeyboard = false;
 };

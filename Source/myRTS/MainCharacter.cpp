@@ -7,6 +7,7 @@
 #include <GameFramework/Character.h>
 #include <GameFramework/CharacterMovementComponent.h>
 #include <BehaviorTree/BehaviorTree.h>
+#include "UnitsSquad.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -33,10 +34,9 @@ void AMainCharacter::BeginPlay()
 
 void AMainCharacter::SetDamage_Implementation(float Damage, AActor * DamageCauser)
 {
-
 	Healt -= Damage;
 
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("zycie = %f"),Healt));
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("zycie = %f"), Healt));
 
 	if (Healt<=0)
 	{
@@ -44,7 +44,16 @@ void AMainCharacter::SetDamage_Implementation(float Damage, AActor * DamageCause
 	}
 }
 
-// Called every frame
+void AMainCharacter::EnableDecalEffect_Implementation()
+{
+
+}
+
+void AMainCharacter::DisableDecalEffect_Implementation()
+{
+
+}
+
 void AMainCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -57,4 +66,15 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 }
+
+void AMainCharacter::Destroyed()
+{
+	Super::Destroyed();
+
+	if (UnitsSquad != NULL)
+	{
+		UnitsSquad->RemoveFromSquad(this);
+	}
+}
+
 

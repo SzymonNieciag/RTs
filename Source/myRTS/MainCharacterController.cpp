@@ -6,44 +6,53 @@
 #include <AIController.h>
 #include <BehaviorTree/BlackboardComponent.h>
 #include <BehaviorTree/BehaviorTree.h>
+#include "myRTSGameMode.h"
 
-AMainCharacterController::AMainCharacterController()
-{
-	BehaviorTreeComp = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BlackboardComp"));
-	BlackboardComp = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BehaviorComp"));
+AMainCharacterController::AMainCharacterController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+{/*
+	BehaviorTreeComp = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BlackboardComp"));*/
+	Blackboard = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BehaviorComp"));
 }
 
 void AMainCharacterController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//AMainCharacter* MainCharacter = Cast<AMainCharacter>(GetPawn());
+	//RunBehaviorTree(MainCharacter->BehaviorTree);
 }
 
 void AMainCharacterController::OnPossess(APawn * InPawn)
 {
 	Super::OnPossess(InPawn);
 
-	AMainCharacter* Char = Cast<AMainCharacter>(InPawn);
-	if (Char && Char->BehaviorTree->BlackboardAsset)
+	if (GetWorld()) {
+		AmyRTSGameMode* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
+		RTSGameMode->AllPawns.Add(this->GetPawn());
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("polskapolksakokopkpkopkopk")));
+
+	}
+
+	AMainCharacter* MainCharacter = Cast<AMainCharacter>(InPawn);
+	if (MainCharacter->BehaviorTree->BlackboardAsset)
 	{
 		//Initialize the blackboard values
-		BlackboardComp->InitializeBlackboard(*Char->BehaviorTree->BlackboardAsset);
-		BehaviorTreeComp->StartTree(*Char->BehaviorTree);
+		Blackboard->InitializeBlackboard(*MainCharacter->BehaviorTree->BlackboardAsset);
 	}
 }
-  
 
-void AMainCharacterController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
+bool AMainCharacterController::RunBehaviorTree(UBehaviorTree * BTAsset)
 {
-	Super::OnMoveCompleted(RequestID, Result);
-	AMainCharacter *MainCharacter = Cast<AMainCharacter>(GetPawn());
+	Super::RunBehaviorTree(BTAsset);
 
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("koniec chodzenia")));
-
+	AMainCharacter* MainCharacter = Cast<AMainCharacter>(GetPawn());
 	if (MainCharacter)
 	{
-		BehaviorTreeComp->StartTree(*MainCharacter->BehaviorTree);
+		MainCharacter->BehaviorTree = BTAsset;
+		//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("sdgsgdgd ")));
+		return true;
 	}
+	return false;
 }
 
 void AMainCharacterController::SetGenericTeamId(const FGenericTeamId & TeamID)
@@ -51,8 +60,84 @@ void AMainCharacterController::SetGenericTeamId(const FGenericTeamId & TeamID)
 	AITeamID = TeamID;
 }
 
-
 FGenericTeamId AMainCharacterController::GetGenericTeamId() const
 {
 	return AITeamID;
 }
+
+void AMainCharacterController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
+{
+	Super::OnMoveCompleted(RequestID, Result);
+
+	AMainCharacter *MainCharacter = Cast<AMainCharacter>(GetPawn());
+
+	if (MainCharacter)
+	{
+		RunBehaviorTree(MainCharacter->BehaviorTree);
+	}
+}
+
+void AMainCharacterController::OnBeginMovement()
+{
+
+	GetBrainComponent()->StopLogic("stop");
+
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("start chodzenie")));
+
+	//MainCharacterController->BehaviorTreeComp->StartTree(*x->BehaviorTree);
+}
+
+//AAIControllerBase::AAIControllerBase()
+//{
+//	TeamProperties.TeamName = "BOT";
+//}
+//
+//void AAIControllerBase::OnPossess(APawn* InPawn)
+//{
+//	Super::OnPossess(InPawn);
+//}
+//
+//void AAIControllerBase::SetTeamProperties(const FTeamProperties TeamProp)
+//{
+//	TeamProperties = TeamProp;
+//
+//}
+//
+//FTeamProperties AAIControllerBase::GetTeamProperties() const
+//{
+//	return TeamProperties;
+//}
+//
+//ETeamAttitude::Type AAIControllerBase::GetTeamAttitudeTowards(const AActor & Other) const
+//{
+//	if (const APawn* OtherPawn = Cast<APawn>(&Other)) {
+//
+//		if (const AAIControllerBase* BaseController = Cast<AAIControllerBase>(OtherPawn->GetController()))
+//		{
+//			FTeamProperties OtherTeamProperties = BaseController->GetTeamProperties();
+//
+//
+//			if (OtherTeamProperties.AITeamID == TeamProperties.AITeamID)
+//			{
+//				return ETeamAttitude::Friendly;
+//			}
+//			for (int32 Team : TeamProperties.EnemyListID)
+//			{
+//				if (Team == OtherTeamProperties.AITeamID)
+//				{
+//					return ETeamAttitude::Hostile;
+//				}
+//			}
+//			for (int32 Team : TeamProperties.FriendListID)
+//			{
+//				if (Team == OtherTeamProperties.AITeamID)
+//				{
+//					return ETeamAttitude::Friendly;
+//				}
+//			}
+//			return ETeamAttitude::Neutral;
+//		}
+//		return ETeamAttitude::Neutral;
+//	}
+//	return ETeamAttitude::Neutral;
+//}  ovveride Aiperceptions

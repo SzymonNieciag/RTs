@@ -14,6 +14,7 @@
 #include "MainCharacter.h"
 #include <BehaviorTree/Blackboard/BlackboardKeyType_Enum.h>
 #include <BehaviorTree/BehaviorTreeTypes.h>
+#include "myRTSGameMode.h"
 
 void UBTS_Perception::OnBecomeRelevant(UBehaviorTreeComponent & OwnerComp, uint8 * NodeMemory)
 {
@@ -36,26 +37,23 @@ void UBTS_Perception::TickNode(UBehaviorTreeComponent & OwnerComp, uint8 * NodeM
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
-
 	Enemy = GetClosestEnemy(OwnerComp);
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("tick perception")));
 
 	if (Enemy!=nullptr)
 	{
 		AMainCharacter *MainCharacter = Cast<AMainCharacter>(OwnerComp.GetAIOwner()->GetPawn());
-
 		OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Object>(CurrentEnemy.GetSelectedKeyID(), Enemy);
+
 		if (MainCharacter)
 		{
 			float RangeAttack = MainCharacter->RangeAttack;
 
-			if (MainCharacter->GetDistanceTo(Enemy)>= RangeAttack)
+			if (MainCharacter->GetDistanceTo(Enemy) >= RangeAttack)
 			{
 				OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Enum>(CurrentState.GetSelectedKeyID(), (uint8)EStateType::Walk);
-				
 			}
-			else {
-				//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("attack %d"), (uint8)EStateType::Attack));
+			else
+			{
 				OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Enum>(CurrentState.GetSelectedKeyID(), (uint8)EStateType::Attack);
 			}
 		}
@@ -63,7 +61,7 @@ void UBTS_Perception::TickNode(UBehaviorTreeComponent & OwnerComp, uint8 * NodeM
 	else
 		OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Enum>(CurrentState.GetSelectedKeyID(), (uint8)EStateType::Walk);
 }
-void UBTS_Perception::GetAllEnemiesInRange(UBehaviorTreeComponent &OwnerComp, TArray<AActor*>& OutActors,float ViewRange)
+void UBTS_Perception::GetAllEnemiesInRange(UBehaviorTreeComponent &OwnerComp, TArray<AActor*> &OutActors, float Range)
 {
 	AActor *OwnerPawn = OwnerComp.GetAIOwner()->GetPawn();
 
@@ -72,12 +70,14 @@ void UBTS_Perception::GetAllEnemiesInRange(UBehaviorTreeComponent &OwnerComp, TA
 			UWorld *World = GetWorld();
 			if (World)
 			{
-				TArray<AActor*> FoundPawns;
-				UGameplayStatics::GetAllActorsOfClass(World, APawn::StaticClass(), FoundPawns);
+				auto* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
 
-				FGenericTeamId OwnerTeam = OwnerComp.GetAIOwner()->GetGenericTeamId();/*
-				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("sssssssssssss %d"), OwnerTeam.GetId()));*/
-				for (AActor* Actor : FoundPawns)
+				/*TArray<AActor*> FoundPawns;
+				UGameplayStatics::GetAllActorsOfClass(World, APawn::StaticClass(), FoundPawns);*/
+
+				FGenericTeamId OwnerTeam = OwnerComp.GetAIOwner()->GetGenericTeamId();
+
+				for (AActor* Actor : RTSGameMode->AllPawns)
 				{
 					APawn *Pawn = Cast<APawn>(Actor);
 
@@ -87,8 +87,8 @@ void UBTS_Perception::GetAllEnemiesInRange(UBehaviorTreeComponent &OwnerComp, TA
 					{
 						if (OwnerTeam != MainCharacterController->GetGenericTeamId())
 						{
-							float Range = ViewRange * ViewRange;
-							if (OwnerPawn->GetSquaredDistanceTo(Actor)<Range)
+							float SquaredRange = Range * Range;
+							if (OwnerPawn->GetSquaredDistanceTo(Actor)<SquaredRange)
 							{
 								OutActors.Add(Pawn);
 							}
@@ -105,8 +105,8 @@ AActor* UBTS_Perception::GetClosestEnemy(UBehaviorTreeComponent & OwnerComp)
 
 	if (OwnerPawn)
 	{
-		TArray <AActor*> Enemies;
-		GetAllEnemiesInRange(OwnerComp, Enemies,ViewRange);
+		TArray<AActor*> Enemies;
+		GetAllEnemiesInRange(OwnerComp, Enemies, ViewRange);
 
 		AActor *LocalEnemy = nullptr;
 		float AveDistance = 1000000000;
@@ -139,7 +139,7 @@ void UBTS_Perception::InitializeFromAsset(UBehaviorTree & Asset)
 		CurrentEnemy.ResolveSelectedKey(*BBAsset);
 		CurrentState.ResolveSelectedKey(*BBAsset);
 
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::Printf(TEXT("inizjalizacja w perception")));
+		//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::Printf(TEXT("inizjalizacja w perception")));
 	}
 	bNotifyBecomeRelevant = true;
 }

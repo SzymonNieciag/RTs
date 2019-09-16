@@ -18,16 +18,18 @@ public:
 
 	class ARTSHud *HUDPtr;
 
+	TArray<AUnitsSquad*> SelectedSquads;
+
 protected:
 
 	void SelectionPressed();
 	void SelectionRelased();
+
 	void MoveReleased();
 
 	virtual void BeginPlay()override;
 	//virtual void PlayerTick(float DeltaTime) override;
 	virtual void SetupInputComponent() override;
-
 };
 
 

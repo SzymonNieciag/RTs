@@ -12,7 +12,6 @@ void ARTSHud::DrawHUD()
 	{
 		CurrentPoint = GetMousePos2D();
 		DrawRect(FLinearColor(1,0,0,0.3f), InitialPoint.X, InitialPoint.Y, CurrentPoint.X - InitialPoint.X, CurrentPoint.Y - InitialPoint.Y);
-		//GetActorsInSelectionRectangle<AMainCharacter>(InitialPoint, CurrentPoint, FoundActors, false, false);
 		SelectedActors.Empty();
 		GetActorsInSelectionRectangle<AMainCharacter>(InitialPoint, CurrentPoint, SelectedActors, false, false);
 	}
