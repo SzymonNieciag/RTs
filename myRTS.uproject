@@ -11,8 +11,15 @@
 			"AdditionalDependencies": [
 				"Engine",
 				"AIModule",
-				"CoreUObject"
+				"CoreUObject",
+				"GameplayAbilities"
 			]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "GameplayAbilities",
+			"Enabled": true
 		}
 	]
 }

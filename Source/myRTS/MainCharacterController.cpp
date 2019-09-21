@@ -27,10 +27,9 @@ void AMainCharacterController::OnPossess(APawn * InPawn)
 	Super::OnPossess(InPawn);
 
 	if (GetWorld()) {
+
 		AmyRTSGameMode* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
 		RTSGameMode->AllPawns.Add(this->GetPawn());
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("polskapolksakokopkpkopkopk")));
-
 	}
 
 	AMainCharacter* MainCharacter = Cast<AMainCharacter>(InPawn);
@@ -70,7 +69,6 @@ void AMainCharacterController::OnMoveCompleted(FAIRequestID RequestID, const FPa
 	Super::OnMoveCompleted(RequestID, Result);
 
 	AMainCharacter *MainCharacter = Cast<AMainCharacter>(GetPawn());
-
 	if (MainCharacter)
 	{
 		RunBehaviorTree(MainCharacter->BehaviorTree);

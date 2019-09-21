@@ -86,22 +86,26 @@ void AmyRTSPlayerController::MoveReleased()
 
 				float LocationX = HitResult.Location.X;
 				float LocationY = HitResult.Location.Y;
-				float UnitSize = 150; // move param to PlayerCharacter
 
 				int32 MaxNumberofProbes = MaxIndex;
 				int32 PawnTurn = 0;
+
+				AMainCharacter *MainCharacter = Cast<AMainCharacter>(HUDPtr->SelectedActors[PawnTurn]);
+				float UnitSize = MainCharacter->NavLocationSize;
+
 				///////////////////
 				FVector CheckLocation = FVector(LocationX, LocationY, HitResult.Location.Z);
 				FVector CorrectLocation;
 
-				if (UNavigationSystemV1::K2_ProjectPointToNavigation(GetWorld(), CheckLocation, CorrectLocation, NavData, nullptr, FVector(0, 0, 0)))
+				// Check ProjectPoint if he is moveable. Don't setup FVector(0,0,0)!.
+				if (UNavigationSystemV1::K2_ProjectPointToNavigation(GetWorld(), CheckLocation, CorrectLocation, NavData, nullptr, FVector(50, 50, 50)))
 				{
 					UAIBlueprintHelperLibrary::SimpleMoveToLocation(HUDPtr->SelectedActors[PawnTurn]->GetController(), CorrectLocation);
 
 					AMainCharacterController *MainCharacterController = Cast<AMainCharacterController>(HUDPtr->SelectedActors[0]->GetController());
 					MainCharacterController->OnBeginMovement();
 
-					DrawDebugSphere(GetWorld(), CorrectLocation, 25, 10, FColor::Blue, 3, 5);
+					DrawDebugSphere(GetWorld(), CheckLocation, 25, 10, FColor::Blue, 3, 5);
 
 					PawnTurn++;
 				}
@@ -110,6 +114,7 @@ void AmyRTSPlayerController::MoveReleased()
 
 				for (int i = 1; i < MaxNumberofProbes; i++)
 				{
+
 					if (Direction == Right)
 					{
 						Cout--;
@@ -154,6 +159,7 @@ void AmyRTSPlayerController::MoveReleased()
 						LocationY -= UnitSize;
 					}
 
+
 					CheckLocation = FVector(LocationX, LocationY, HitResult.Location.Z);
 
 					if (UNavigationSystemV1::K2_ProjectPointToNavigation(GetWorld(), CheckLocation, CorrectLocation, NavData, nullptr, FVector(50, 50, 50)))
@@ -169,6 +175,7 @@ void AmyRTSPlayerController::MoveReleased()
 					}
 					else
 					{
+						DrawDebugSphere(GetWorld(), CorrectLocation, 25, 10, FColor::Blue, 3, 5);
 						MaxNumberofProbes++;
 					}
 				}

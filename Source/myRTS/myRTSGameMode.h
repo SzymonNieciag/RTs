@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "myRTSGameMode.generated.h"
 
+class ACoverActorBase;
+
 UCLASS(minimalapi)
 class AmyRTSGameMode : public AGameModeBase
 {
@@ -16,7 +18,10 @@ public:
 	AmyRTSGameMode();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Units")
-	TArray<AActor*> AllPawns;
+		TArray<AActor*> AllPawns;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Units")
+		 TArray<ACoverActorBase*> AllCoverActors;
 };
 
 
