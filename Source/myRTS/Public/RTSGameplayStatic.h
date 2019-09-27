@@ -19,3 +19,4 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "RTS|Damage")
 	static float ApplyDamage(AActor* DamagedActor, float BaseDamage, AActor* DamageCauser);
 };
+

@@ -24,7 +24,9 @@ class MYRTS_API UBTS_CoverPerception : public UBTService
 protected:
 
 public:
-
+	/* Max Distance Filter CoverActors*/
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "AI")
+	float Range = 500; 
 	/** called when auxiliary node becomes active
 	* this function should be considered as const (don't modify state of object) if node is not instanced! */
 	virtual void OnBecomeRelevant(UBehaviorTreeComponent &OwnerComp, uint8 *NodeMemory) override;
@@ -36,6 +38,8 @@ public:
 	virtual void OnSearchStart(FBehaviorTreeSearchData &SearchData)override;
 
 	virtual void TickNode(UBehaviorTreeComponent &OwnerComp, uint8 *NodeMemory, float DeltaSeconds) override;
+
+	void SearchCoverActors(UBehaviorTreeComponent & OwnerComp);
 
 	void GetCoverPointsInRange(AMainCharacter *OwnerPawn, TArray<ACoverActorBase*> &OutActors, float Range);
 

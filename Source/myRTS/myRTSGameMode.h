@@ -21,7 +21,7 @@ public:
 		TArray<AActor*> AllPawns;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Units")
-		 TArray<ACoverActorBase*> AllCoverActors;
+		TArray<ACoverActorBase*> AllCoverActors;
 };
 
 

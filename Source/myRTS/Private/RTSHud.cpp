@@ -5,6 +5,7 @@
 #include <GameFramework/HUD.h>
 #include <GameFramework/PlayerController.h>
 #include "MainCharacter.h"
+#include "RTSGameplayStatic.h"
 
 void ARTSHud::DrawHUD()
 {

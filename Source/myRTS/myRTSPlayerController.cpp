@@ -1,7 +1,6 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "myRTSPlayerController.h"
-#include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Runtime/Engine/Classes/Components/DecalComponent.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Engine/World.h"
@@ -95,15 +94,16 @@ void AmyRTSPlayerController::MoveReleased()
 
 				///////////////////
 				FVector CheckLocation = FVector(LocationX, LocationY, HitResult.Location.Z);
-				FVector CorrectLocation;
+				FVector DestinationLocation;
 
 				// Check ProjectPoint if he is moveable. Don't setup FVector(0,0,0)!.
-				if (UNavigationSystemV1::K2_ProjectPointToNavigation(GetWorld(), CheckLocation, CorrectLocation, NavData, nullptr, FVector(50, 50, 50)))
+				if (UNavigationSystemV1::K2_ProjectPointToNavigation(GetWorld(), CheckLocation, DestinationLocation, NavData, nullptr, FVector(50, 50, 50)))
 				{
-					UAIBlueprintHelperLibrary::SimpleMoveToLocation(HUDPtr->SelectedActors[PawnTurn]->GetController(), CorrectLocation);
-
 					AMainCharacterController *MainCharacterController = Cast<AMainCharacterController>(HUDPtr->SelectedActors[0]->GetController());
-					MainCharacterController->OnBeginMovement();
+					if (MainCharacterController)
+					{
+						MainCharacterController->MoveToLocationRTS(DestinationLocation);
+					}
 
 					DrawDebugSphere(GetWorld(), CheckLocation, 25, 10, FColor::Blue, 3, 5);
 
@@ -162,20 +162,19 @@ void AmyRTSPlayerController::MoveReleased()
 
 					CheckLocation = FVector(LocationX, LocationY, HitResult.Location.Z);
 
-					if (UNavigationSystemV1::K2_ProjectPointToNavigation(GetWorld(), CheckLocation, CorrectLocation, NavData, nullptr, FVector(50, 50, 50)))
+					if (UNavigationSystemV1::K2_ProjectPointToNavigation(GetWorld(), CheckLocation, DestinationLocation, NavData, nullptr, FVector(50, 50, 50)))
 					{
-						UAIBlueprintHelperLibrary::SimpleMoveToLocation(HUDPtr->SelectedActors[PawnTurn]->GetController(), CorrectLocation);
 
 						AMainCharacterController *MainCharacterController = Cast<AMainCharacterController>(HUDPtr->SelectedActors[PawnTurn]->GetController());
-						MainCharacterController->OnBeginMovement();
+						MainCharacterController->MoveToLocationRTS(DestinationLocation);
 
-						DrawDebugSphere(GetWorld(), CorrectLocation, 25, 10, FColor::Green, 3, 5);
+						DrawDebugSphere(GetWorld(), DestinationLocation, 25, 10, FColor::Green, 3, 5);
 
 						PawnTurn++;
 					}
 					else
 					{
-						DrawDebugSphere(GetWorld(), CorrectLocation, 25, 10, FColor::Blue, 3, 5);
+						DrawDebugSphere(GetWorld(), DestinationLocation, 25, 10, FColor::Blue, 3, 5);
 						MaxNumberofProbes++;
 					}
 				}

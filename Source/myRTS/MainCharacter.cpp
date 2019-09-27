@@ -11,6 +11,8 @@
 #include "myRTSGameMode.h"
 #include <../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/AbilitySystemComponent.h>
 #include "Abilities/AttributeSetBase.h"
+#include "CoverActorBase.h"
+#include <AIController.h>
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -37,9 +39,20 @@ void AMainCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	UCharacterMovementComponent *MovementPtr = Cast<UCharacterMovementComponent>(GetCharacterMovement());
-	MovementPtr->MaxWalkSpeed = Speed;
 
-	AttributeSetBase->OnHealtChange.AddDynamic(this, &AMainCharacter::OnHealtChanged);
+	//AttributeSetBase->OnHealtChange.AddDynamic(this, &AMainCharacter::HandleHealthChanged);
+}
+
+bool AMainCharacter::IsAlive()
+{
+	if (GetHealth()>0)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 void AMainCharacter::EnableDecalEffect_Implementation()
@@ -70,19 +83,6 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 }
 
-void AMainCharacter::Destroyed()
-{
-	Super::Destroyed();
-
-	if (UnitsSquad != NULL)
-	{
-		UnitsSquad->RemoveFromSquad(this);
-		// Remove this actor from GameMode Pawn TArray
-		AmyRTSGameMode* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
-		RTSGameMode->AllPawns.Remove(this);
-	}
-}
-
 void AMainCharacter::AquireAbility(TSubclassOf<UGameplayAbility> AbilityToAquire)
 {
 	if (AbilitySystemComponent)
@@ -95,38 +95,53 @@ void AMainCharacter::AquireAbility(TSubclassOf<UGameplayAbility> AbilityToAquire
 	}
 }
 
-void AMainCharacter::OnHealtChanged(float Health, float MaxHealth)
+void AMainCharacter::HandleDamage(float DamageAmount, const FHitResult & HitInfo, const FGameplayTagContainer & DamageTags, AMainCharacter * InstigatorPawn, AActor * DamageCauser)
 {
-	if (Health <= 0)
-	{
-		BP_Die();
-		return;
-	}
-	BP_OnHealtChanged(Health, MaxHealth);
+	OnDamaged(DamageAmount, HitInfo, DamageTags, InstigatorPawn, DamageCauser);
 }
 
-float AMainCharacter::TakeRTSDamage_Implementation(float DamageAmount, AActor* DamageCauser)
+void AMainCharacter::HandleHealthChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags)
 {
-	float ActualDamage = DamageAmount;
+	OnHealtChanged(DeltaValue, EventTags);
 
-	if (ActualDamage != 0.f)
+	if (!IsAlive())
 	{
-		ReceiveRTSDamage(ActualDamage, DamageCauser);
-		OnTakeRTSDamage.Broadcast(ActualDamage, DamageCauser);
+		AmyRTSGameMode* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
+		RTSGameMode->AllPawns.Remove(this);
+
+		OnDeath();
 	}
-	return ActualDamage;
 }
 
-void AMainCharacter::ReceiveRTSDamage(float DamageAmount, AActor* DamageCauser)
+float AMainCharacter::GetHealth() const
 {
-	Healt -= DamageAmount;
+	return AttributeSetBase->GetHealth();
+}
 
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("zycie = %f"), Healt));
+float AMainCharacter::GetMaxHealth() const
+{
+	return AttributeSetBase->GetMaxHealth();
+}
 
-	if (Healt <= 0)
+float AMainCharacter::GetStamina() const
+{
+	return AttributeSetBase->GetStatmina();
+}
+
+float AMainCharacter::GetMaxStamina() const
+{
+	return AttributeSetBase->GetMaxStamina();
+}
+
+bool AMainCharacter::LeaveTheCover()
+{
+	if (CoverActor)
 	{
-		Destroy();
+		CoverActor->CoverData.CurrentActor = nullptr;
+		CoverActor = nullptr;
+		return true;
 	}
+	return false;
 }
 
 bool AMainCharacter::GetCooldownRemainingForTag(FGameplayTagContainer CooldownTags, float& TimeRemaining, float& CooldownDuration)
@@ -158,4 +173,15 @@ bool AMainCharacter::GetCooldownRemainingForTag(FGameplayTagContainer CooldownTa
 		}
 	}
 	return false;
+}
+
+void AMainCharacter::Destroyed()
+{
+	Super::Destroyed();
+
+	if (UnitsSquad != NULL)
+	{
+		UnitsSquad->RemoveFromSquad(this);
+		// Remove this actor from GameMode Pawn TArray
+	}
 }

@@ -11,13 +11,13 @@
 #include <../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/Abilities/GameplayAbility.h>
 #include "MainCharacter.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTakeRTSDamageSignature, float, DamageAmount, AActor*, DamageCauser);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTakeRTSDamageSignature, float, DeltaValue, const struct FGameplayTagContainer&, EventTags);
 
 class UAttributeSetBase;
 class ACoverActorBase;
 
 UCLASS()
-class MYRTS_API AMainCharacter : public ACharacter, public ICanBeDamaged, public IIsSelectable, public IAbilitySystemInterface
+class MYRTS_API AMainCharacter : public ACharacter, public IIsSelectable, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 public:
@@ -40,23 +40,63 @@ public:
 
 	//************//  Ability System //************//
 
+	/** The component used to handle ability system interactions */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "CharacterBase")
 		UAbilitySystemComponent *AbilitySystemComponent;
+
+	/** List of attributes modified by the ability system */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CharacterBase")
 		UAttributeSetBase *AttributeSetBase;
+
 	UFUNCTION(BlueprintCallable, Category = "CharacterMesh")
 		void AquireAbility(TSubclassOf<UGameplayAbility> AbilityToAquire);
+
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
 		bool GetCooldownRemainingForTag(FGameplayTagContainer CooldownTags, float & TimeRemaining, float & CooldownDuration);
 
-	UFUNCTION()
-		void OnHealtChanged(float Health, float MaxHealth);
+	/**
+	* Called when character takes damage, which may have killed them
+	*
+	* @param DamageAmount Amount of damage that was done, not clamped based on current health
+	* @param HitInfo The hit info that generated this damage
+	* @param DamageTags The gameplay tags of the event that did the damage
+	* @param InstigatorCharacter The character that initiated this damage
+	* @param DamageCauser The actual actor that did the damage, might be a weapon or projectile
+	*/
+	UFUNCTION(BlueprintImplementableEvent)
+		void OnDamaged(float DamageAmount, const FHitResult& HitInfo, const struct FGameplayTagContainer& DamageTags, AMainCharacter* InstigatorCharacter, AActor* DamageCauser);
+	/**
+	* Called when health is changed, either from healing or from being damaged
+	* For damage this is called in addition to OnDamaged/OnKilled
+	*
+	* @param DeltaValue Change in health value, positive for heal, negative for cost. If 0 the delta is unknown
+	* @param EventTags The gameplay tags of the event that changed mana
+	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "CharacterBase", meta = (DisplayName = "OnHealthChanged"))
-		void BP_OnHealtChanged(float Health, float MaxHealth);
-	UFUNCTION(BlueprintImplementableEvent, Category = "CharacterBase", meta = (DisplayName = "OnHealthChanged"))
-		void BP_Die();
+		void OnHealtChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags);
 
-	////////////////////////////////////////////
+	// Called from RPGAttributeSet, these call BP events above
+		void HandleDamage(float DamageAmount, const FHitResult& HitInfo, const struct FGameplayTagContainer& DamageTags, AMainCharacter* InstigatorPawn, AActor* DamageCauser);
+		void HandleHealthChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "CharacterBase", meta = (DisplayName = "OnDie"))
+		void OnDeath();
+
+	/** Returns current health, will be 0 if dead */
+	UFUNCTION(BlueprintCallable)
+		virtual float GetHealth() const;
+
+	/** Returns maximum health, health will never be greater than this */
+	UFUNCTION(BlueprintCallable)
+		virtual float GetMaxHealth() const;
+
+	/** Returns current stamina */
+	UFUNCTION(BlueprintCallable)
+		virtual float GetStamina() const;
+
+	/** Returns maximum stamina, stamina will never be greater than this */
+	UFUNCTION(BlueprintCallable)
+		virtual float GetMaxStamina() const;
 
 	//****************//  AI //***************//
 
@@ -68,31 +108,17 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AI")
 		ACoverActorBase *CoverActor;
+	/* Return true if was covered */
+	UFUNCTION(BlueprintCallable, Category = "AI")
+		bool LeaveTheCover();
 	//////////////////////////////////////////////////
 
-	UPROPERTY(EditAnywhere, Category = "Stat")
-		float Healt = 100;
-	UPROPERTY(EditAnywhere, Category = "Stat")
-		float Attack = 10;
-	UPROPERTY(EditAnywhere, Category = "Stat")
-		float Armor = 10;
-	UPROPERTY(EditAnywhere, Category = "Stat")
-		float RangeAttack = 200;
-	UPROPERTY(EditAnywhere, Category = "Stat")
-		float Speed = 400;
-	UPROPERTY(EditAnywhere, Category = "Stat")
-		bool isAlive = true;
+public:
 	UPROPERTY(EditAnywhere, Category = "Navigation")
 		float NavLocationSize = 50;
-	
-	UPROPERTY(BlueprintAssignable, Category = "RTS|Damage")
-		FTakeRTSDamageSignature OnTakeRTSDamage;
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "RTS|Damage")
-		float TakeRTSDamage(float DamageAmount, AActor* DamageCauser);
-	virtual float TakeRTSDamage_Implementation(float DamageAmount, AActor* DamageCauser) override;
-
-	virtual void ReceiveRTSDamage(float DamageAmount, AActor* DamageCauser);
+	UFUNCTION(BlueprintCallable, Category = "AI")
+		bool IsAlive();
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Decal")
 		void EnableDecalEffect();  
@@ -106,7 +132,7 @@ public:
 
 	virtual void Destroyed() override;
 
-	//FORCEINLINE class UDecalComponent* GetCursorToWorld() { return CursorToWorld; }
+	FORCEINLINE class ACoverActorBase* GetCoveredActor() { return CoverActor; }
 };
 
 

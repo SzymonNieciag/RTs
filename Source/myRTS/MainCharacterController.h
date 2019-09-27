@@ -10,6 +10,8 @@
 /**
  * 
  */
+class AMainCharacter;
+
 UENUM(BlueprintType)
 enum class ETeamType :uint8
 {
@@ -41,9 +43,12 @@ public:
 
 	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)override;
 
-	virtual void OnBeginMovement();
+	virtual void MoveToLocationRTS(FVector Destination);
 
 	virtual bool RunBehaviorTree(UBehaviorTree* BTAsset) override;
+
+	UPROPERTY()
+	AMainCharacter* MainCharacter;
 
 private:
 

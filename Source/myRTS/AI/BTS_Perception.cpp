@@ -43,23 +43,26 @@ void UBTS_Perception::TickNode(UBehaviorTreeComponent & OwnerComp, uint8 * NodeM
 	{
 		AMainCharacter *MainCharacter = Cast<AMainCharacter>(OwnerComp.GetAIOwner()->GetPawn());
 		OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Object>(CurrentEnemy.GetSelectedKeyID(), Enemy);
-
+		/* Enemy is out of range. Move to them or Not*/
 		if (MainCharacter)
 		{
-			float RangeAttack = MainCharacter->RangeAttack;
+			//float RangeAttack = MainCharacter->RangeAttack;
 
-			if (MainCharacter->GetDistanceTo(Enemy) >= RangeAttack)
+//			if (MainCharacter->GetDistanceTo(Enemy) >= RangeAttack)
 			{
 				OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Enum>(CurrentState.GetSelectedKeyID(), (uint8)EStateType::Walk);
 			}
-			else
+	//		else
 			{
 				OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Enum>(CurrentState.GetSelectedKeyID(), (uint8)EStateType::Attack);
 			}
 		}
 	}
 	else
-		OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Enum>(CurrentState.GetSelectedKeyID(), (uint8)EStateType::Walk);
+	{
+		OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Enum>(CurrentState.GetSelectedKeyID(), (uint8)EStateType::Idle);
+		OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Object>(CurrentEnemy.GetSelectedKeyID(), UObject::StaticClass());
+	}
 }
 void UBTS_Perception::GetAllEnemiesInRange(UBehaviorTreeComponent &OwnerComp, TArray<AActor*> &OutActors, float Range)
 {

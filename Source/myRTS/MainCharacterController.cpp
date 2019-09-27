@@ -7,6 +7,7 @@
 #include <BehaviorTree/BlackboardComponent.h>
 #include <BehaviorTree/BehaviorTree.h>
 #include "myRTSGameMode.h"
+#include <Blueprint/AIBlueprintHelperLibrary.h>
 
 AMainCharacterController::AMainCharacterController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {/*
@@ -32,7 +33,7 @@ void AMainCharacterController::OnPossess(APawn * InPawn)
 		RTSGameMode->AllPawns.Add(this->GetPawn());
 	}
 
-	AMainCharacter* MainCharacter = Cast<AMainCharacter>(InPawn);
+	MainCharacter = Cast<AMainCharacter>(InPawn);
 	if (MainCharacter->BehaviorTree->BlackboardAsset)
 	{
 		//Initialize the blackboard values
@@ -72,16 +73,21 @@ void AMainCharacterController::OnMoveCompleted(FAIRequestID RequestID, const FPa
 	if (MainCharacter)
 	{
 		RunBehaviorTree(MainCharacter->BehaviorTree);
+		this->GetBlackboardComponent()->SetValueAsBool("PriorityOrder", false);
 	}
 }
 
-void AMainCharacterController::OnBeginMovement()
+void AMainCharacterController::MoveToLocationRTS(FVector Destination)
 {
 
+	UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, Destination);
+
+	this->GetBlackboardComponent()->SetValueAsBool("PriorityOrder", true);
 	GetBrainComponent()->StopLogic("stop");
 
-	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("start chodzenie")));
+	MainCharacter->LeaveTheCover();
 
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("start chodzenie")));
 	//MainCharacterController->BehaviorTreeComp->StartTree(*x->BehaviorTree);
 }
 

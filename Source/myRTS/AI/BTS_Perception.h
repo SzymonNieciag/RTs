@@ -25,8 +25,8 @@ class MYRTS_API UBTS_Perception : public UBTService
 protected:
 
 public:
-
-	float ViewRange = 2000;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+		float ViewRange = 2000;
 	/** called when auxiliary node becomes active
 	* this function should be considered as const (don't modify state of object) if node is not instanced! */
 	virtual void OnBecomeRelevant(UBehaviorTreeComponent &OwnerComp, uint8 *NodeMemory) override;

@@ -29,31 +29,14 @@ void UBTS_CoverPerception::OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, ui
 void UBTS_CoverPerception::OnSearchStart(FBehaviorTreeSearchData& SearchData)
 {
 	Super::OnSearchStart(SearchData);
-
+	SearchCoverActors(SearchData.OwnerComp);
 }
 
 void UBTS_CoverPerception::TickNode(UBehaviorTreeComponent & OwnerComp, uint8 * NodeMemory, float DeltaSeconds)
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
-	AMainCharacter *MainCharacter = Cast<AMainCharacter>(OwnerComp.GetAIOwner()->GetPawn());
-	UWorld *World = GetWorld();
-	if (World)
-	{
-		TArray<ACoverActorBase*> CoverActors;
-		GetCoverPointsInRange(MainCharacter, CoverActors, 500);
-		CoverActors.Sort();
-
-		for (ACoverActorBase* CoverActor : CoverActors)
-		{
-			if (!MainCharacter->CoverActor && !CoverActor->CoverData.CurrentActor)
-			{
-				MainCharacter->CoverActor = CoverActor;
-				CoverActor->CoverData.CurrentActor = MainCharacter;
-				DrawDebugLine(GetWorld(), OwnerComp.GetAIOwner()->GetPawn()->GetActorLocation(), CoverActor->GetActorLocation(), FColor::Green, false, 1, 0, 1);
-			}
-		}
-	}
+	SearchCoverActors(OwnerComp);
 }
 
 void UBTS_CoverPerception::GetCoverPointsInRange(AMainCharacter *OwnerPawn, TArray<ACoverActorBase*>& OutActors, float Range)
@@ -61,7 +44,6 @@ void UBTS_CoverPerception::GetCoverPointsInRange(AMainCharacter *OwnerPawn, TArr
 	AmyRTSGameMode* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
 	for (auto CoverActor : RTSGameMode->AllCoverActors)
 	{
-		float Range = 500; // add after as public value
 		float SquaredRange = Range * Range;
 		if (OwnerPawn->GetSquaredDistanceTo(CoverActor) < SquaredRange)
 		{
@@ -80,4 +62,28 @@ void UBTS_CoverPerception::InitializeFromAsset(UBehaviorTree & Asset)
 		//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::Printf(TEXT("inizjalizacja w perception")));
 	}
 	bNotifyBecomeRelevant = true;
+}
+
+void UBTS_CoverPerception::SearchCoverActors(UBehaviorTreeComponent & OwnerComp)
+{
+	AMainCharacter *MainCharacter = Cast<AMainCharacter>(OwnerComp.GetAIOwner()->GetPawn());
+	if (!MainCharacter->CoverActor)
+	{
+		TArray<ACoverActorBase*> CoverActors;
+		GetCoverPointsInRange(MainCharacter, CoverActors, 500);
+		CoverActors.Sort();
+		for (ACoverActorBase* CoverActor : CoverActors)
+		{
+			if (!CoverActor->CoverData.CurrentActor)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("GOGO To Cover")));
+				MainCharacter->CoverActor = CoverActor;
+				CoverActor->CoverData.CurrentActor = MainCharacter;
+
+				DrawDebugSphere(GetWorld(), CoverActor->GetActorLocation(), 25, 10, FColor::Blue, 3, 25);
+				DrawDebugLine(GetWorld(), OwnerComp.GetAIOwner()->GetPawn()->GetActorLocation(), CoverActor->GetActorLocation(), FColor::Blue, false, 1, 0, 5.0f);
+				return;
+			}
+		}
+	}
 }
