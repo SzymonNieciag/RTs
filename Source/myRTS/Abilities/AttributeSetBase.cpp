@@ -34,7 +34,12 @@ void UAttributeSetBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 void UAttributeSetBase::PreAttributeChange(const FGameplayAttribute & Attribute, float & NewValue)
 {
+	if (Attribute == GetAttackPowerAttribute())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("cos sie popsulo")));
 
+		NewValue = 4;
+	}
 }
 
 void UAttributeSetBase::PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData &Data)
@@ -107,7 +112,7 @@ void UAttributeSetBase::PostGameplayEffectExecute(const struct FGameplayEffectMo
 		const float LocalDamageDone = GetDamage();
 		SetDamage(0.f);
 
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("damage = %f"), LocalDamageDone));
+		//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("damage = %f"), LocalDamageDone));
 
 		if (LocalDamageDone > 0)
 		{

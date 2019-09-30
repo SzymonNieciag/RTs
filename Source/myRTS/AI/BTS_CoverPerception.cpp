@@ -18,7 +18,6 @@
 void UBTS_CoverPerception::OnBecomeRelevant(UBehaviorTreeComponent & OwnerComp, uint8 * NodeMemory)
 {
 	Super::OnBecomeRelevant(OwnerComp, NodeMemory);
-
 }
 
 void UBTS_CoverPerception::OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -39,51 +38,93 @@ void UBTS_CoverPerception::TickNode(UBehaviorTreeComponent & OwnerComp, uint8 * 
 	SearchCoverActors(OwnerComp);
 }
 
-void UBTS_CoverPerception::GetCoverPointsInRange(AMainCharacter *OwnerPawn, TArray<ACoverActorBase*>& OutActors, float Range)
-{
-	AmyRTSGameMode* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
-	for (auto CoverActor : RTSGameMode->AllCoverActors)
-	{
-		float SquaredRange = Range * Range;
-		if (OwnerPawn->GetSquaredDistanceTo(CoverActor) < SquaredRange)
-		{
-			OutActors.Add(CoverActor);
-		}
-	}
-}
-
-void UBTS_CoverPerception::InitializeFromAsset(UBehaviorTree & Asset)
+void UBTS_CoverPerception::InitializeFromAsset(UBehaviorTree& Asset)
 {
 	Super::InitializeFromAsset(Asset);
 	UBlackboardData* BBAsset = GetBlackboardAsset();
 	if (ensure(BBAsset))
 	{
-		//CurrentCoverActor.ResolveSelectedKey(*BBAsset);
+		Enemy.ResolveSelectedKey(*BBAsset);
 		//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::Printf(TEXT("inizjalizacja w perception")));
 	}
 	bNotifyBecomeRelevant = true;
 }
 
-void UBTS_CoverPerception::SearchCoverActors(UBehaviorTreeComponent & OwnerComp)
+void UBTS_CoverPerception::SearchCoverActors(UBehaviorTreeComponent& OwnerComp)
 {
-	AMainCharacter *MainCharacter = Cast<AMainCharacter>(OwnerComp.GetAIOwner()->GetPawn());
-	if (!MainCharacter->CoverActor)
+	AMainCharacter* MainCharacter = Cast<AMainCharacter>(OwnerComp.GetAIOwner()->GetPawn());
+	if (!MainCharacter->IsCovered())
 	{
-		TArray<ACoverActorBase*> CoverActors;
-		GetCoverPointsInRange(MainCharacter, CoverActors, 500);
-		CoverActors.Sort();
-		for (ACoverActorBase* CoverActor : CoverActors)
+		UObject* Object = OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Object>(Enemy.GetSelectedKeyID());
+		AMainCharacter* Enemy = nullptr;
+		if (Object)
 		{
-			if (!CoverActor->CoverData.CurrentActor)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("GOGO To Cover")));
-				MainCharacter->CoverActor = CoverActor;
-				CoverActor->CoverData.CurrentActor = MainCharacter;
+			Enemy = Cast<AMainCharacter>(Object);
+		}
+		if (Enemy)
+		{
+			TArray<ACoverActorBase*> CoverActors;
 
-				DrawDebugSphere(GetWorld(), CoverActor->GetActorLocation(), 25, 10, FColor::Blue, 3, 25);
-				DrawDebugLine(GetWorld(), OwnerComp.GetAIOwner()->GetPawn()->GetActorLocation(), CoverActor->GetActorLocation(), FColor::Blue, false, 1, 0, 5.0f);
-				return;
+			
+			GetCoverPointsInRange(MainCharacter, CoverActors, 1000.0f);
+
+			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::Printf(TEXT("inizjalizacja w perception %d"),CoverActors.Num()));
+
+			/* Lambda sort Array */
+			CoverActors.Sort([](const ACoverActorBase& ip1, const ACoverActorBase& ip2) {
+				return ip1.DistanceSqrtmp < ip2.DistanceSqrtmp;
+			});/*
+			int xx = 10;
+			for (ACoverActorBase *CoverActor : CoverActors)
+			{
+				DrawDebugSphere(GetWorld(), CoverActor->GetActorLocation(), xx, 10, FColor::Blue, false, 3.0f, 25.0f);
+				xx += 20;
+			}*/
+
+			/* Check if Found point isn't already set*/
+			for (ACoverActorBase *CoverActor : CoverActors)
+			{
+				if (CoverActor->GetDestinateTargetActor())
+				{
+					if (CoverActor->GetDestinateTargetActor() == MainCharacter)
+					{
+						return;
+					}
+				}
+				/* set new Cover Point */
+				else if(!CoverActor->GetDestinateTargetActor())
+				{
+					MainCharacter->CoverActor = nullptr;
+					CoverActor->SetDestinateTargetActor(nullptr);
+					MainCharacter->CoverActor = CoverActor;
+					CoverActor->SetDestinateTargetActor(MainCharacter);
+
+					DrawDebugSphere(GetWorld(), CoverActor->GetActorLocation(), 25, 10, FColor::Blue, false, 3.0f, 25.0f);
+					DrawDebugLine(GetWorld(), OwnerComp.GetAIOwner()->GetPawn()->GetActorLocation(), CoverActor->GetActorLocation(), FColor::Blue, false, 1, 0, 5.0f);
+					return;
+				}
 			}
 		}
 	}
 }
+
+void UBTS_CoverPerception::GetCoverPointsInRange(AMainCharacter *OwnerPawn, TArray<ACoverActorBase*> &OutActors, float Range)
+{
+	auto* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
+	for (ACoverActorBase *CoverActor : RTSGameMode->AllCoverActors)
+	{
+		float SquaredRange = Range * Range;
+		float Distancetmp = OwnerPawn->GetSquaredDistanceTo(CoverActor);
+		if (Distancetmp < SquaredRange)
+		{
+			CoverActor->DistanceSqrtmp = Distancetmp;
+			OutActors.Add(CoverActor);
+		}
+	}
+}
+
+//for (const TPair<int32, AActor*>& pair : exampleIntegerToActorMap)
+//{
+//	pair.Key;
+//	pair.Value;
+//}

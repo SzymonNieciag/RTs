@@ -10,8 +10,8 @@
 #include <Blueprint/AIBlueprintHelperLibrary.h>
 
 AMainCharacterController::AMainCharacterController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
-{/*
-	BehaviorTreeComp = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BlackboardComp"));*/
+{
+	//BehaviorTreeComp = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BlackboardComp"));
 	Blackboard = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BehaviorComp"));
 }
 
@@ -33,7 +33,7 @@ void AMainCharacterController::OnPossess(APawn * InPawn)
 		RTSGameMode->AllPawns.Add(this->GetPawn());
 	}
 
-	MainCharacter = Cast<AMainCharacter>(InPawn);
+	AMainCharacter *MainCharacter = Cast<AMainCharacter>(InPawn);
 	if (MainCharacter->BehaviorTree->BlackboardAsset)
 	{
 		//Initialize the blackboard values
@@ -55,14 +55,26 @@ bool AMainCharacterController::RunBehaviorTree(UBehaviorTree * BTAsset)
 	return false;
 }
 
-void AMainCharacterController::SetGenericTeamId(const FGenericTeamId & TeamID)
+FAIRequestID AMainCharacterController::RequestMove(const FAIMoveRequest& MoveRequest, FNavPathSharedPtr Path)
 {
-	AITeamID = TeamID;
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("start chodzenie")));
+	AMainCharacter *MainCharacter = Cast<AMainCharacter>(GetPawn());
+	//if (MainCharacter)
+	//{
+	//	MainCharacter->LeaveTheCover();
+	//}
+	return Super::RequestMove(MoveRequest, Path);
+}
+
+void AMainCharacterController::SetGenericTeamId(const FGenericTeamId & NewTeamID)
+{
+	Super::SetGenericTeamId(NewTeamID);
+	//AITeamID = NewTeamID;
 }
 
 FGenericTeamId AMainCharacterController::GetGenericTeamId() const
 {
-	return AITeamID;
+	return Super::GetGenericTeamId();
 }
 
 void AMainCharacterController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
@@ -72,20 +84,23 @@ void AMainCharacterController::OnMoveCompleted(FAIRequestID RequestID, const FPa
 	AMainCharacter *MainCharacter = Cast<AMainCharacter>(GetPawn());
 	if (MainCharacter)
 	{
-		RunBehaviorTree(MainCharacter->BehaviorTree);
+		//RunBehaviorTree(MainCharacter->BehaviorTree);
 		this->GetBlackboardComponent()->SetValueAsBool("PriorityOrder", false);
 	}
 }
 
 void AMainCharacterController::MoveToLocationRTS(FVector Destination)
 {
-
-	UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, Destination);
+	MoveToLocation(Destination, 30, true, true, false);
 
 	this->GetBlackboardComponent()->SetValueAsBool("PriorityOrder", true);
-	GetBrainComponent()->StopLogic("stop");
+	//GetBrainComponent()->StopLogic("stop");
 
-	MainCharacter->LeaveTheCover();
+	AMainCharacter *MainCharacter = Cast<AMainCharacter>(GetPawn());
+	if (MainCharacter)
+	{
+		MainCharacter->LeaveTheCover();
+	}
 
 	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("start chodzenie")));
 	//MainCharacterController->BehaviorTreeComp->StartTree(*x->BehaviorTree);

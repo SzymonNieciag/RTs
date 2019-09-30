@@ -79,7 +79,7 @@ void URTSDamageExecution::Execute_Implementation(const FGameplayEffectCustomExec
 	float Damage = 0.f;
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().DamageDef, EvaluationParameters, Damage);
 
-	float DamageDone = Damage * AttackPower / DefensePower;
+	float DamageDone = Damage * SourceMainCharacter->Weapon->GetWeaponDamage() / DefensePower;
 	if (DamageDone > 0.f)
 	{
 		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().DamageProperty, EGameplayModOp::Additive, DamageDone));

@@ -9,7 +9,6 @@
 #include <BehaviorTree/Blackboard/BlackboardKeyType_Object.h>
 #include <BehaviorTree/BehaviorTreeTypes.h>
 #include <BehaviorTree/BlackboardComponent.h>
-#include <GameFramework/Actor.h>
 #include "Interface/CanBeDamaged.h"
 #include <GameFramework/Pawn.h>
 #include <AIController.h>
@@ -26,14 +25,7 @@ EBTNodeResult::Type UBTT_Attack::ExecuteTask(UBehaviorTreeComponent & OwnerComp,
 		UObject *Object= OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Object>(Enemy.GetSelectedKeyID());
 		if (Object!=nullptr)
 		{
-			AActor *Actor = Cast<AActor>(Object);
-			if (ICanBeDamaged* TheInterface = Cast<ICanBeDamaged>(Actor))
-			{
-				float x = URTSGameplayStatic::ApplyDamage(Actor, 10, OwnerPawn);
-				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("left health %f"), x)); // check it work?!
-			}
-			DrawDebugLine(GetWorld(), MainCharacter->GetActorLocation(), Actor->GetActorLocation(), FColor::Green, false, 1, 0, 1);
-			return EBTNodeResult::Succeeded;
+			AMainCharacter *TargetMainCharacter = Cast<AMainCharacter>(Object);
 		}
 		return EBTNodeResult::Failed;
 	}

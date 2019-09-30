@@ -1,0 +1,9 @@
+1. Znajdz wszystkie pkt Cover w zasiegu X (np. 500) i nie jest zajety
+2. Posortuj ze wzgledu na odleglosc
+3. wez najblizszy i sprawdz czy uchronicie przed stzra³em
+4. Jesli nie wez nastepny i sprawdz do konca wszystkie
+5. jesli znajdziesz ustaw cover point na zajety.
+6. idz tam ale filtruj inne cover pointy po drodze co 2 sekundy
+7. if movecompleted sprawdz odleglosc jesli jestes minimum 100 od celu to ustaw ze jestes chroniony
+8. strzelaj w wroga jesli nie jest covered zadaj pelne obrazenia
+9. 

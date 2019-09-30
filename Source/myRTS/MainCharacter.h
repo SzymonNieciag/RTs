@@ -9,12 +9,15 @@
 #include "Interface/IsSelectable.h"
 #include <../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/AbilitySystemInterface.h>
 #include <../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/Abilities/GameplayAbility.h>
+#include "Item/Weapon.h"
 #include "MainCharacter.generated.h"
 
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTakeRTSDamageSignature, float, DeltaValue, const struct FGameplayTagContainer&, EventTags);
 
 class UAttributeSetBase;
 class ACoverActorBase;
+
+#define SafeSqrDistance 10000.0f
 
 UCLASS()
 class MYRTS_API AMainCharacter : public ACharacter, public IIsSelectable, public IAbilitySystemInterface
@@ -35,17 +38,14 @@ protected:
 
 public:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Mesh")
-		UStaticMeshComponent *MainMesh;
-
 	//************//  Ability System //************//
 
 	/** The component used to handle ability system interactions */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "CharacterBase")
+	UPROPERTY(BlueprintReadOnly, Category = "CharacterBase")
 		UAbilitySystemComponent *AbilitySystemComponent;
 
 	/** List of attributes modified by the ability system */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CharacterBase")
+	UPROPERTY(BlueprintReadOnly, Category = "CharacterBase")
 		UAttributeSetBase *AttributeSetBase;
 
 	UFUNCTION(BlueprintCallable, Category = "CharacterMesh")
@@ -79,46 +79,62 @@ public:
 		void HandleDamage(float DamageAmount, const FHitResult& HitInfo, const struct FGameplayTagContainer& DamageTags, AMainCharacter* InstigatorPawn, AActor* DamageCauser);
 		void HandleHealthChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "CharacterBase", meta = (DisplayName = "OnDie"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "CharacterBase", meta = (DisplayName = "OnDeath"))
 		void OnDeath();
 
 	/** Returns current health, will be 0 if dead */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Damage")
 		virtual float GetHealth() const;
 
 	/** Returns maximum health, health will never be greater than this */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Damage")
 		virtual float GetMaxHealth() const;
 
 	/** Returns current stamina */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Damage")
 		virtual float GetStamina() const;
 
 	/** Returns maximum stamina, stamina will never be greater than this */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Damage")
 		virtual float GetMaxStamina() const;
 
 	//****************//  AI //***************//
 
-	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	UPROPERTY(BlueprintReadOnly, Category = "AI")
 		UBehaviorTree *BehaviorTree;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Squad")
+	UPROPERTY(BlueprintReadOnly, Category = "Squad")
 		class AUnitsSquad *UnitsSquad;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AI")
+	UPROPERTY(BlueprintReadOnly, Category = "AI")
 		ACoverActorBase *CoverActor;
+
+	/* Return true if is covered */
+	UFUNCTION(BlueprintCallable, Category = "AI")
+		bool IsCovered();
+
 	/* Return true if was covered */
 	UFUNCTION(BlueprintCallable, Category = "AI")
 		bool LeaveTheCover();
+
+	FORCEINLINE class ACoverActorBase* GetCoveredActor() { return CoverActor; }
 	//////////////////////////////////////////////////
 
-public:
-	UPROPERTY(EditAnywhere, Category = "Navigation")
+	//****************//  Stats //***************//
+
+	/* Check Weapon is AttachementToActor on BeginPlay in BP_Character */
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Items|Weapon")
+		AWeapon *Weapon;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Navigation")
 		float NavLocationSize = 50;
 
 	UFUNCTION(BlueprintCallable, Category = "AI")
 		bool IsAlive();
+
+	/* Calculation of the total accuracy allowing to hit the target */
+	UFUNCTION(BlueprintCallable, Category = "Weapon|Damage")
+		float CalculateChanceToHitTarget(AActor *TargetActor);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Decal")
 		void EnableDecalEffect();  
@@ -131,11 +147,7 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const;
 
 	virtual void Destroyed() override;
-
-	FORCEINLINE class ACoverActorBase* GetCoveredActor() { return CoverActor; }
 };
-
-
 
 
 //

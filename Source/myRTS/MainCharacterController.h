@@ -41,14 +41,14 @@ public:
 
 	virtual void OnPossess(APawn* InPawn)override;
 
-	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)override;
+	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
 
 	virtual void MoveToLocationRTS(FVector Destination);
 
 	virtual bool RunBehaviorTree(UBehaviorTree* BTAsset) override;
 
-	UPROPERTY()
-	AMainCharacter* MainCharacter;
+	virtual FAIRequestID RequestMove(const FAIMoveRequest& MoveRequest, FNavPathSharedPtr Path) override;
+
 
 private:
 
@@ -57,13 +57,12 @@ private:
 public:
 
 	UFUNCTION(BlueprintCallable,Category = "AI")
-	virtual void SetGenericTeamId(const FGenericTeamId& TeamID) override;
+	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
 
 	/** Retrieve team identifier in form of FGenericTeamId */
 	UFUNCTION(BlueprintCallable, Category = "AI")
-	virtual FGenericTeamId GetGenericTeamId()const override;
+	virtual FGenericTeamId GetGenericTeamId() const override;
 };
-
 //AAIControllerBase();
 //virtual void OnPossess(APawn* InPawn)override;
 //

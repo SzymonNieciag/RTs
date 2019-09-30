@@ -15,6 +15,7 @@
 #include <BehaviorTree/Blackboard/BlackboardKeyType_Enum.h>
 #include <BehaviorTree/BehaviorTreeTypes.h>
 #include "myRTSGameMode.h"
+#include <BehaviorTree/BlackboardData.h>
 
 void UBTS_Perception::OnBecomeRelevant(UBehaviorTreeComponent & OwnerComp, uint8 * NodeMemory)
 {
@@ -68,38 +69,38 @@ void UBTS_Perception::GetAllEnemiesInRange(UBehaviorTreeComponent &OwnerComp, TA
 {
 	AActor *OwnerPawn = OwnerComp.GetAIOwner()->GetPawn();
 
-		if (OwnerPawn)
+	if (OwnerPawn)
+	{
+		UWorld *World = GetWorld();
+		if (World)
 		{
-			UWorld *World = GetWorld();
-			if (World)
+			auto* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
+
+			/*TArray<AActor*> FoundPawns;
+			UGameplayStatics::GetAllActorsOfClass(World, APawn::StaticClass(), FoundPawns);*/
+
+			FGenericTeamId OwnerTeam = OwnerComp.GetAIOwner()->GetGenericTeamId();
+
+			for (AActor* Actor : RTSGameMode->AllPawns)
 			{
-				auto* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
+				APawn *Pawn = Cast<APawn>(Actor);
 
-				/*TArray<AActor*> FoundPawns;
-				UGameplayStatics::GetAllActorsOfClass(World, APawn::StaticClass(), FoundPawns);*/
+				AMainCharacterController *MainCharacterController = Cast<AMainCharacterController>(Pawn->GetController());
 
-				FGenericTeamId OwnerTeam = OwnerComp.GetAIOwner()->GetGenericTeamId();
-
-				for (AActor* Actor : RTSGameMode->AllPawns)
+				if (MainCharacterController)
 				{
-					APawn *Pawn = Cast<APawn>(Actor);
-
-					AMainCharacterController *MainCharacterController = Cast<AMainCharacterController>(Pawn->GetController());
-
-					if (MainCharacterController)
+					if (OwnerTeam != MainCharacterController->GetGenericTeamId())
 					{
-						if (OwnerTeam != MainCharacterController->GetGenericTeamId())
+						float SquaredRange = Range * Range;
+						if (OwnerPawn->GetSquaredDistanceTo(Actor)<SquaredRange)
 						{
-							float SquaredRange = Range * Range;
-							if (OwnerPawn->GetSquaredDistanceTo(Actor)<SquaredRange)
-							{
-								OutActors.Add(Pawn);
-							}
+							OutActors.Add(Pawn);
 						}
 					}
 				}
 			}
 		}
+	}
 }
 
 AActor* UBTS_Perception::GetClosestEnemy(UBehaviorTreeComponent & OwnerComp)

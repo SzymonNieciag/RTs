@@ -23,10 +23,6 @@ AMainCharacter::AMainCharacter()
 
 	BehaviorTree = CreateDefaultSubobject<UBehaviorTree>(TEXT("BehaviorTreeReference"));
 
-	MainMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
-	MainMesh->SetupAttachment(RootComponent);
-	MainMesh->RelativeLocation = FVector(0,0,-90);
-
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
 	AttributeSetBase = CreateDefaultSubobject<UAttributeSetBase>(TEXT("UAttributeSetBaseComp"));
 	AttributeSetBase->Health = 200;
@@ -40,6 +36,7 @@ void AMainCharacter::BeginPlay()
 
 	UCharacterMovementComponent *MovementPtr = Cast<UCharacterMovementComponent>(GetCharacterMovement());
 
+	//Weapon->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	//AttributeSetBase->OnHealtChange.AddDynamic(this, &AMainCharacter::HandleHealthChanged);
 }
 
@@ -108,7 +105,6 @@ void AMainCharacter::HandleHealthChanged(float DeltaValue, const struct FGamepla
 	{
 		AmyRTSGameMode* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
 		RTSGameMode->AllPawns.Remove(this);
-
 		OnDeath();
 	}
 }
@@ -133,11 +129,48 @@ float AMainCharacter::GetMaxStamina() const
 	return AttributeSetBase->GetMaxStamina();
 }
 
+float AMainCharacter::CalculateChanceToHitTarget(AActor *TargetActor)
+{
+	if (Weapon)
+	{
+		AMainCharacter *TargetMainCharacter = Cast<AMainCharacter>(TargetActor);
+		//if (!TargetMainCharacter)
+		//	return 0.0f;
+		ACoverActorBase *TargetCoverActorBase = TargetMainCharacter->CoverActor;
+
+		if (TargetCoverActorBase) 
+		{
+			return TargetCoverActorBase->CoverData.ReduceChanceToHit * Weapon->CalculateWeaponAccuracyAtDistance(AActor::GetDistanceTo(TargetActor));;
+		}
+		else
+		{
+			Weapon->CalculateWeaponAccuracyAtDistance(AActor::GetDistanceTo(TargetActor));;
+		}
+	}
+	return 0.0f;
+}
+
+bool AMainCharacter::IsCovered()
+{
+	if (CoverActor)
+	{
+		if (GetSquaredDistanceTo(CoverActor) < SafeSqrDistance)
+		{
+			true;
+		}
+		else
+		{
+			false;
+		}
+	}
+	return false;
+}
+
 bool AMainCharacter::LeaveTheCover()
 {
 	if (CoverActor)
 	{
-		CoverActor->CoverData.CurrentActor = nullptr;
+		CoverActor->SetDestinateTargetActor(nullptr);
 		CoverActor = nullptr;
 		return true;
 	}

@@ -24,6 +24,7 @@ protected:
 	/** blackboard key selector */
 	UPROPERTY(EditAnywhere, Category = Blackboard)
 		struct FBlackboardKeySelector Enemy;
+
 };
 
 //FORCEINLINE FName UBTT_SelectNextPoint::GetSelectedBlackboardKey() const
