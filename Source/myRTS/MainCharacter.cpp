@@ -11,12 +11,13 @@
 #include "myRTSGameMode.h"
 #include <../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/AbilitySystemComponent.h>
 #include "Abilities/AttributeSetBase.h"
-#include "CoverActorBase.h"
 #include <AIController.h>
+#include "Environment/CoverGoalPoint.h"
+#include <DrawDebugHelpers.h>
 
 // Sets default values
 AMainCharacter::AMainCharacter()
-	:CoverActor(nullptr)
+	:CoverPoint(nullptr)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -105,8 +106,14 @@ void AMainCharacter::HandleHealthChanged(float DeltaValue, const struct FGamepla
 	{
 		AmyRTSGameMode* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
 		RTSGameMode->AllPawns.Remove(this);
-		OnDeath();
+		HandleDeath();
 	}
+}
+
+void AMainCharacter::HandleDeath()
+{
+	LeaveTheCover();
+	OnDeath();
 }
 
 float AMainCharacter::GetHealth() const
@@ -136,15 +143,33 @@ float AMainCharacter::CalculateChanceToHitTarget(AActor *TargetActor)
 		AMainCharacter *TargetMainCharacter = Cast<AMainCharacter>(TargetActor);
 		//if (!TargetMainCharacter)
 		//	return 0.0f;
-		ACoverActorBase *TargetCoverActorBase = TargetMainCharacter->CoverActor;
+		ACoverGoalPoint *TargetCoverPoint = TargetMainCharacter->CoverPoint;
 
-		if (TargetCoverActorBase) 
+		if (TargetCoverPoint) 
 		{
-			return TargetCoverActorBase->CoverData.ReduceChanceToHit * Weapon->CalculateWeaponAccuracyAtDistance(AActor::GetDistanceTo(TargetActor));;
+			FHitResult OutHit;
+			FVector Start = TargetMainCharacter->GetActorLocation();
+
+			Start.Z += 50.f;
+
+			FVector Direction = this->GetActorLocation() - TargetMainCharacter->GetActorLocation();
+			Direction.Normalize(0.1);
+			FVector End = ((Direction * 300.f) + Start);
+
+			FCollisionQueryParams CollisionParams;
+
+			DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 5);
+
+			if (GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_EngineTraceChannel1, CollisionParams))
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("The Component Being Hit is: %s"), *OutHit.GetComponent()->GetName()));
+			}
+			DrawDebugSphere(GetWorld(), TargetCoverPoint->GetActorLocation(), 160, 3, FColor::Blue, false, 3.0f, 25.0f);
+			return TargetCoverPoint->CoverData.ReduceChanceToHit * Weapon->CalculateWeaponAccuracyAtDistance(this->GetDistanceTo(TargetActor));
 		}
 		else
 		{
-			Weapon->CalculateWeaponAccuracyAtDistance(AActor::GetDistanceTo(TargetActor));;
+			return Weapon->CalculateWeaponAccuracyAtDistance(this->GetDistanceTo(TargetActor));;
 		}
 	}
 	return 0.0f;
@@ -152,15 +177,20 @@ float AMainCharacter::CalculateChanceToHitTarget(AActor *TargetActor)
 
 bool AMainCharacter::IsCovered()
 {
-	if (CoverActor)
+	return CheckCoverPoint(CoverPoint);
+}
+
+bool AMainCharacter::CheckCoverPoint(ACoverGoalPoint* CoverGoalPoint)
+{
+	if (CoverGoalPoint)
 	{
-		if (GetSquaredDistanceTo(CoverActor) < SafeSqrDistance)
+		if (GetSquaredDistanceTo(CoverGoalPoint) < SafeSqrDistance)
 		{
-			true;
+			 return true;
 		}
 		else
 		{
-			false;
+			return false;
 		}
 	}
 	return false;
@@ -168,10 +198,10 @@ bool AMainCharacter::IsCovered()
 
 bool AMainCharacter::LeaveTheCover()
 {
-	if (CoverActor)
+	if (CoverPoint)
 	{
-		CoverActor->SetDestinateTargetActor(nullptr);
-		CoverActor = nullptr;
+		CoverPoint->SetDestinateTargetActor(nullptr);
+		CoverPoint = nullptr;
 		return true;
 	}
 	return false;

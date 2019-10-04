@@ -15,7 +15,7 @@
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTakeRTSDamageSignature, float, DeltaValue, const struct FGameplayTagContainer&, EventTags);
 
 class UAttributeSetBase;
-class ACoverActorBase;
+class ACoverGoalPoint;
 
 #define SafeSqrDistance 10000.0f
 
@@ -78,8 +78,9 @@ public:
 	// Called from RPGAttributeSet, these call BP events above
 		void HandleDamage(float DamageAmount, const FHitResult& HitInfo, const struct FGameplayTagContainer& DamageTags, AMainCharacter* InstigatorPawn, AActor* DamageCauser);
 		void HandleHealthChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags);
+		void HandleDeath();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "CharacterBase", meta = (DisplayName = "OnDeath"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "CharacterBase", meta = (DisplayName = "Character"))
 		void OnDeath();
 
 	/** Returns current health, will be 0 if dead */
@@ -107,17 +108,19 @@ public:
 		class AUnitsSquad *UnitsSquad;
 
 	UPROPERTY(BlueprintReadOnly, Category = "AI")
-		ACoverActorBase *CoverActor;
+		class ACoverGoalPoint *CoverPoint;
 
 	/* Return true if is covered */
 	UFUNCTION(BlueprintCallable, Category = "AI")
 		bool IsCovered();
+		bool CheckCoverPoint(ACoverGoalPoint* CoverGoalPoint);
 
 	/* Return true if was covered */
 	UFUNCTION(BlueprintCallable, Category = "AI")
 		bool LeaveTheCover();
+	
 
-	FORCEINLINE class ACoverActorBase* GetCoveredActor() { return CoverActor; }
+	FORCEINLINE class ACoverGoalPoint* GetCoveredActor() { return CoverPoint; }
 	//////////////////////////////////////////////////
 
 	//****************//  Stats //***************//
@@ -127,7 +130,7 @@ public:
 		AWeapon *Weapon;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Navigation")
-		float NavLocationSize = 50;
+		float NavLocationSize = 100;
 
 	UFUNCTION(BlueprintCallable, Category = "AI")
 		bool IsAlive();

@@ -8,6 +8,9 @@
 #include <BehaviorTree/BehaviorTree.h>
 #include "myRTSGameMode.h"
 #include <Blueprint/AIBlueprintHelperLibrary.h>
+#include <DrawDebugHelpers.h>
+#include <BrainComponent.h>
+#include "Environment/CoverGoalPoint.h"
 
 AMainCharacterController::AMainCharacterController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -55,17 +58,6 @@ bool AMainCharacterController::RunBehaviorTree(UBehaviorTree * BTAsset)
 	return false;
 }
 
-FAIRequestID AMainCharacterController::RequestMove(const FAIMoveRequest& MoveRequest, FNavPathSharedPtr Path)
-{
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("start chodzenie")));
-	AMainCharacter *MainCharacter = Cast<AMainCharacter>(GetPawn());
-	//if (MainCharacter)
-	//{
-	//	MainCharacter->LeaveTheCover();
-	//}
-	return Super::RequestMove(MoveRequest, Path);
-}
-
 void AMainCharacterController::SetGenericTeamId(const FGenericTeamId & NewTeamID)
 {
 	Super::SetGenericTeamId(NewTeamID);
@@ -80,13 +72,30 @@ FGenericTeamId AMainCharacterController::GetGenericTeamId() const
 void AMainCharacterController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
 	Super::OnMoveCompleted(RequestID, Result);
-
+	this->GetBlackboardComponent()->SetValueAsBool("PriorityOrder", false);
 	AMainCharacter *MainCharacter = Cast<AMainCharacter>(GetPawn());
+
 	if (MainCharacter)
 	{
-		//RunBehaviorTree(MainCharacter->BehaviorTree);
-		this->GetBlackboardComponent()->SetValueAsBool("PriorityOrder", false);
+		if (UObject* Object = GetBrainComponent()->GetBlackboardComponent()->GetValueAsObject("Goal"))
+		{
+			ACoverGoalPoint *CoverActorPoint = Cast<ACoverGoalPoint>(Object);
+			if (CoverActorPoint)
+			{
+				if (MainCharacter->CheckCoverPoint(CoverActorPoint))
+				{
+					MainCharacter->CoverPoint = CoverActorPoint;
+					DrawDebugSphere(GetWorld(), MainCharacter->CoverPoint->GetActorLocation(), 40, 3, FColor::Red, false, 3.0f, 25.0f);
+				}
+				else
+				{
+					MainCharacter->CoverPoint = nullptr;
+				}
+			}
+		}
 	}
+
+	OnStopMovement.Broadcast(MainCharacter);
 }
 
 void AMainCharacterController::MoveToLocationRTS(FVector Destination)
@@ -94,18 +103,25 @@ void AMainCharacterController::MoveToLocationRTS(FVector Destination)
 	MoveToLocation(Destination, 30, true, true, false);
 
 	this->GetBlackboardComponent()->SetValueAsBool("PriorityOrder", true);
-	//GetBrainComponent()->StopLogic("stop");
-
 	AMainCharacter *MainCharacter = Cast<AMainCharacter>(GetPawn());
-	if (MainCharacter)
+
+	if (MainCharacter && MainCharacter->CoverPoint)
 	{
 		MainCharacter->LeaveTheCover();
 	}
-
-	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("start chodzenie")));
-	//MainCharacterController->BehaviorTreeComp->StartTree(*x->BehaviorTree);
 }
 
+FAIRequestID AMainCharacterController::RequestMove(const FAIMoveRequest& MoveRequest, FNavPathSharedPtr Path)
+{
+	AMainCharacter *MainCharacter = Cast<AMainCharacter>(GetPawn());
+	if (MainCharacter && MainCharacter->CoverPoint)
+	{
+		MainCharacter->LeaveTheCover();
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("wyjscie z covera")));
+
+	}
+	return Super::RequestMove(MoveRequest, Path);
+}
 //AAIControllerBase::AAIControllerBase()
 //{
 //	TeamProperties.TeamName = "BOT";

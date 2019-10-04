@@ -1,6 +1,6 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
-#include "myRTSPlayerController.h"
+#include "RTSPlayerController.h"
 #include "Runtime/Engine/Classes/Components/DecalComponent.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Engine/World.h"
@@ -16,25 +16,25 @@ enum EDirection
 	Right, Up, Left, Down
 };
 
-AmyRTSPlayerController::AmyRTSPlayerController()
+ARTSPlayerController::ARTSPlayerController()
 {
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
 }
 
-void AmyRTSPlayerController::SetupInputComponent()
+void ARTSPlayerController::SetupInputComponent()
 {
 	// set up gameplay key bindings
 	Super::SetupInputComponent();
 
-	InputComponent->BindAction("LeftMouseClick", IE_Pressed, this, &AmyRTSPlayerController::SelectionPressed);
-	InputComponent->BindAction("LeftMouseClick", IE_Released, this, &AmyRTSPlayerController::SelectionRelased);
+	InputComponent->BindAction("LeftMouseClick", IE_Pressed, this, &ARTSPlayerController::SelectionPressed);
+	InputComponent->BindAction("LeftMouseClick", IE_Released, this, &ARTSPlayerController::SelectionRelased);
 
-	InputComponent->BindAction("RightMouseClick", IE_Pressed, this, &AmyRTSPlayerController::MoveReleased);
+	InputComponent->BindAction("RightMouseClick", IE_Pressed, this, &ARTSPlayerController::MoveReleased);
 	//InputComponent->BindAction("RightMouseClick", IE_Released, this, &AmyRTSPlayerController::OnSetDestinationReleased);
 }
 
-void AmyRTSPlayerController::SelectionPressed()
+void ARTSPlayerController::SelectionPressed()
 {
 	if (HUDPtr != nullptr)
 	{
@@ -52,7 +52,7 @@ void AmyRTSPlayerController::SelectionPressed()
 	}
 }
 
-void AmyRTSPlayerController::SelectionRelased()
+void ARTSPlayerController::SelectionRelased()
 {
 	if (HUDPtr != nullptr)
 	{
@@ -67,7 +67,7 @@ void AmyRTSPlayerController::SelectionRelased()
 	}
 }
 
-void AmyRTSPlayerController::MoveReleased()
+void ARTSPlayerController::MoveReleased()
 {
 	if (HUDPtr->SelectedActors.Num() != 0)
 	{
@@ -164,13 +164,21 @@ void AmyRTSPlayerController::MoveReleased()
 
 					if (UNavigationSystemV1::K2_ProjectPointToNavigation(GetWorld(), CheckLocation, DestinationLocation, NavData, nullptr, FVector(50, 50, 50)))
 					{
-
 						AMainCharacterController *MainCharacterController = Cast<AMainCharacterController>(HUDPtr->SelectedActors[PawnTurn]->GetController());
-						MainCharacterController->MoveToLocationRTS(DestinationLocation);
+						if (MainCharacterController)
+						{
+							MainCharacterController->MoveToLocationRTS(DestinationLocation);
+							DrawDebugSphere(GetWorld(), DestinationLocation, 25, 10, FColor::Green, 3, 5);
 
-						DrawDebugSphere(GetWorld(), DestinationLocation, 25, 10, FColor::Green, 3, 5);
+							PawnTurn++;
+						}
+						else
+						{
+							//UE_LOG(LogTemp, Fatal, TEXT("Brak kontrollera %s"), Cast<AMainCharacterController>(HUDPtr->SelectedActors[PawnTurn],GetName());
+						}
 
-						PawnTurn++;
+
+
 					}
 					else
 					{
@@ -183,7 +191,7 @@ void AmyRTSPlayerController::MoveReleased()
 	}
 }
 
-void AmyRTSPlayerController::BeginPlay()
+void ARTSPlayerController::BeginPlay()
 {
 	HUDPtr = Cast<ARTSHud>(GetHUD());
 }

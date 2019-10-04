@@ -4,7 +4,7 @@
 #include "CameraPawn.h"
 #include <Camera/CameraComponent.h>
 #include <GameFramework/SpringArmComponent.h>
-#include "myRTSPlayerController.h"
+#include "RTSPlayerController.h"
 
 // Sets default values
 ACameraPawn::ACameraPawn()
@@ -29,7 +29,7 @@ ACameraPawn::ACameraPawn()
 void ACameraPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	PlayerController = Cast<AmyRTSPlayerController>(GetController());
+	PlayerController = Cast<ARTSPlayerController>(GetController());
 }
 
 // Called every frame

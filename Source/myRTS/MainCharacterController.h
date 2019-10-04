@@ -25,6 +25,8 @@ enum class ETeamType :uint8
 	LightPink = 7 UMETA(DisplayName = "Light Pink"),
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStopMovementDelegate, APawn*, Pawn);
+
 UCLASS()
 class MYRTS_API AMainCharacterController : public AAIController
 {
@@ -48,6 +50,10 @@ public:
 	virtual bool RunBehaviorTree(UBehaviorTree* BTAsset) override;
 
 	virtual FAIRequestID RequestMove(const FAIMoveRequest& MoveRequest, FNavPathSharedPtr Path) override;
+
+	/* Call to CoverPoint that he can remove this ActorDestination */
+	UPROPERTY(BlueprintAssignable, Category = "AI|Movement")
+	FStopMovementDelegate OnStopMovement;
 
 
 private:

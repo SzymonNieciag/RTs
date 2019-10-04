@@ -4,12 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTService.h"
+#include <BehaviorTree/BehaviorTreeComponent.h>
 #include "BTS_CoverPerception.generated.h"
 
 /**
  * 
  */
-class ACoverActorBase;
+class ACoverGoalPoint;
 class AMainCharacter;
 
 UCLASS()
@@ -17,10 +18,11 @@ class MYRTS_API UBTS_CoverPerception : public UBTService
 {
 	GENERATED_BODY()
 	
-	////Enemy Actor
+	/*Enemy Actor*/
 	UPROPERTY(EditAnywhere, Category = Blackboard)
 		struct FBlackboardKeySelector Enemy;
-
+	UPROPERTY(EditAnywhere, Category = Blackboard)
+		struct FBlackboardKeySelector Goal;
 protected:
 
 public:
@@ -39,7 +41,8 @@ public:
 	/* Search Closest CoversBaseActors and if Enemy is Valid additional scaning safe location*/
 	void SearchCoverActors(UBehaviorTreeComponent & OwnerComp);
 
-	void GetCoverPointsInRange(AMainCharacter *OwnerPawn, TArray<ACoverActorBase*> &OutActors, float Range);
+	void GetCoverPointsInRange(AMainCharacter *OwnerPawn, TArray<ACoverGoalPoint*> &OutActors, float Range);
 
 	virtual void InitializeFromAsset(UBehaviorTree &Asset) override;
+
 };

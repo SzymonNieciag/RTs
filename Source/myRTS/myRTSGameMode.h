@@ -4,9 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "Environment/CoverGoalPoint.h"
 #include "myRTSGameMode.generated.h"
 
-class ACoverActorBase;
+class ACoverGoalPoint;
 
 UCLASS(minimalapi)
 class AmyRTSGameMode : public AGameModeBase
@@ -21,7 +22,7 @@ public:
 		TArray<AActor*> AllPawns;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Units")
-		TArray<ACoverActorBase*> AllCoverActors;
+		TArray<ACoverGoalPoint*> AllCoverActors;
 };
 
 

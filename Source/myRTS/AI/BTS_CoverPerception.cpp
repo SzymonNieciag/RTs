@@ -9,7 +9,7 @@
 #include <BrainComponent.h>
 #include <GameFramework/Controller.h>
 #include <AIController.h>
-#include "CoverActorBase.h"
+#include "Environment/CoverGoalPoint.h"
 #include <BehaviorTree/Blackboard/BlackboardKeyType_Object.h>
 #include <BehaviorTree/BlackboardComponent.h>
 #include <DrawDebugHelpers.h>
@@ -45,6 +45,7 @@ void UBTS_CoverPerception::InitializeFromAsset(UBehaviorTree& Asset)
 	if (ensure(BBAsset))
 	{
 		Enemy.ResolveSelectedKey(*BBAsset);
+		Goal.ResolveSelectedKey(*BBAsset);
 		//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::Printf(TEXT("inizjalizacja w perception")));
 	}
 	bNotifyBecomeRelevant = true;
@@ -63,15 +64,13 @@ void UBTS_CoverPerception::SearchCoverActors(UBehaviorTreeComponent& OwnerComp)
 		}
 		if (Enemy)
 		{
-			TArray<ACoverActorBase*> CoverActors;
-
-			
+			TArray<ACoverGoalPoint*> CoverActors;
 			GetCoverPointsInRange(MainCharacter, CoverActors, 1000.0f);
 
 			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::Printf(TEXT("inizjalizacja w perception %d"),CoverActors.Num()));
 
 			/* Lambda sort Array */
-			CoverActors.Sort([](const ACoverActorBase& ip1, const ACoverActorBase& ip2) {
+			CoverActors.Sort([](const ACoverGoalPoint& ip1, const ACoverGoalPoint& ip2) {
 				return ip1.DistanceSqrtmp < ip2.DistanceSqrtmp;
 			});/*
 			int xx = 10;
@@ -82,7 +81,7 @@ void UBTS_CoverPerception::SearchCoverActors(UBehaviorTreeComponent& OwnerComp)
 			}*/
 
 			/* Check if Found point isn't already set*/
-			for (ACoverActorBase *CoverActor : CoverActors)
+			for (ACoverGoalPoint *CoverActor : CoverActors)
 			{
 				if (CoverActor->GetDestinateTargetActor())
 				{
@@ -94,13 +93,12 @@ void UBTS_CoverPerception::SearchCoverActors(UBehaviorTreeComponent& OwnerComp)
 				/* set new Cover Point */
 				else if(!CoverActor->GetDestinateTargetActor())
 				{
-					MainCharacter->CoverActor = nullptr;
-					CoverActor->SetDestinateTargetActor(nullptr);
-					MainCharacter->CoverActor = CoverActor;
+					OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Object>(Goal.GetSelectedKeyID(), CoverActor); 
 					CoverActor->SetDestinateTargetActor(MainCharacter);
 
-					DrawDebugSphere(GetWorld(), CoverActor->GetActorLocation(), 25, 10, FColor::Blue, false, 3.0f, 25.0f);
+					DrawDebugSphere(GetWorld(), CoverActor->GetActorLocation(), 25, 3, FColor::Blue, false, 3.0f, 25.0f);
 					DrawDebugLine(GetWorld(), OwnerComp.GetAIOwner()->GetPawn()->GetActorLocation(), CoverActor->GetActorLocation(), FColor::Blue, false, 1, 0, 5.0f);
+
 					return;
 				}
 			}
@@ -108,10 +106,10 @@ void UBTS_CoverPerception::SearchCoverActors(UBehaviorTreeComponent& OwnerComp)
 	}
 }
 
-void UBTS_CoverPerception::GetCoverPointsInRange(AMainCharacter *OwnerPawn, TArray<ACoverActorBase*> &OutActors, float Range)
+void UBTS_CoverPerception::GetCoverPointsInRange(AMainCharacter *OwnerPawn, TArray<ACoverGoalPoint*> &OutActors, float Range)
 {
 	auto* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
-	for (ACoverActorBase *CoverActor : RTSGameMode->AllCoverActors)
+	for (ACoverGoalPoint *CoverActor : RTSGameMode->AllCoverActors)
 	{
 		float SquaredRange = Range * Range;
 		float Distancetmp = OwnerPawn->GetSquaredDistanceTo(CoverActor);

@@ -5,16 +5,16 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "MainCharacter.h"
-#include "myRTSPlayerController.generated.h"
+#include "RTSPlayerController.generated.h"
 
 UCLASS()
-class AmyRTSPlayerController : public APlayerController
+class ARTSPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
 public:
 
-	AmyRTSPlayerController();
+	ARTSPlayerController();
 
 	class ARTSHud *HUDPtr;
 
