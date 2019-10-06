@@ -11,7 +11,7 @@
 #include <BehaviorTree/Blackboard/BlackboardKeyType_Object.h>
 #include <BrainComponent.h>
 #include <BehaviorTree/BlackboardComponent.h>
-#include "MainCharacter.h"
+#include "RTSCharacter.h"
 #include <BehaviorTree/Blackboard/BlackboardKeyType_Enum.h>
 #include <BehaviorTree/BehaviorTreeTypes.h>
 #include "myRTSGameMode.h"
@@ -42,37 +42,21 @@ void UBTS_Perception::TickNode(UBehaviorTreeComponent & OwnerComp, uint8 * NodeM
 
 	if (Enemy!=nullptr)
 	{
-		AMainCharacter *MainCharacter = Cast<AMainCharacter>(OwnerComp.GetAIOwner()->GetPawn());
+		ARTSCharacter *MainCharacter = Cast<ARTSCharacter>(OwnerComp.GetAIOwner()->GetPawn());
 		OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Object>(CurrentEnemy.GetSelectedKeyID(), Enemy);
-		/* Enemy is out of range. Move to them or Not*/
-		if (MainCharacter)
-		{
-			//float RangeAttack = MainCharacter->RangeAttack;
-
-//			if (MainCharacter->GetDistanceTo(Enemy) >= RangeAttack)
-			{
-				OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Enum>(CurrentState.GetSelectedKeyID(), (uint8)EStateType::Walk);
-			}
-	//		else
-			{
-				OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Enum>(CurrentState.GetSelectedKeyID(), (uint8)EStateType::Attack);
-			}
-		}
 	}
 	else
 	{
 		OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Enum>(CurrentState.GetSelectedKeyID(), (uint8)EStateType::Idle);
-		OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Object>(CurrentEnemy.GetSelectedKeyID(), UObject::StaticClass());
+		OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Object>(CurrentEnemy.GetSelectedKeyID(), nullptr);
 	}
 }
 void UBTS_Perception::GetAllEnemiesInRange(UBehaviorTreeComponent &OwnerComp, TArray<AActor*> &OutActors, float Range)
 {
 	AActor *OwnerPawn = OwnerComp.GetAIOwner()->GetPawn();
-
 	if (OwnerPawn)
 	{
-		UWorld *World = GetWorld();
-		if (World)
+		if (UWorld *World = GetWorld())
 		{
 			auto* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
 
@@ -81,10 +65,8 @@ void UBTS_Perception::GetAllEnemiesInRange(UBehaviorTreeComponent &OwnerComp, TA
 
 			FGenericTeamId OwnerTeam = OwnerComp.GetAIOwner()->GetGenericTeamId();
 
-			for (AActor* Actor : RTSGameMode->AllPawns)
+			for (APawn* Pawn : RTSGameMode->AllPawns)
 			{
-				APawn *Pawn = Cast<APawn>(Actor);
-
 				AMainCharacterController *MainCharacterController = Cast<AMainCharacterController>(Pawn->GetController());
 
 				if (MainCharacterController)
@@ -92,7 +74,7 @@ void UBTS_Perception::GetAllEnemiesInRange(UBehaviorTreeComponent &OwnerComp, TA
 					if (OwnerTeam != MainCharacterController->GetGenericTeamId())
 					{
 						float SquaredRange = Range * Range;
-						if (OwnerPawn->GetSquaredDistanceTo(Actor)<SquaredRange)
+						if (OwnerPawn->GetSquaredDistanceTo(Pawn) < SquaredRange)
 						{
 							OutActors.Add(Pawn);
 						}

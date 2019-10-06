@@ -6,7 +6,7 @@
 #include <GameplayEffect.h>
 #include <UnrealMathUtility.h>
 #include <UnrealNetwork.h>
-#include "MainCharacter.h"
+#include "RTSCharacter.h"
 
 
 UAttributeSetBase::UAttributeSetBase()
@@ -36,9 +36,7 @@ void UAttributeSetBase::PreAttributeChange(const FGameplayAttribute & Attribute,
 {
 	if (Attribute == GetAttackPowerAttribute())
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("cos sie popsulo")));
 
-		NewValue = 4;
 	}
 }
 
@@ -61,12 +59,12 @@ void UAttributeSetBase::PostGameplayEffectExecute(const struct FGameplayEffectMo
 	// Get the Target actor, which should be our owner
 	AActor* TargetActor = nullptr;
 	AController* TargetController = nullptr;
-	AMainCharacter* TargetCharacter = nullptr;
+	ARTSCharacter* TargetCharacter = nullptr;
 	if (Data.Target.AbilityActorInfo.IsValid() && Data.Target.AbilityActorInfo->AvatarActor.IsValid())
 	{
 		TargetActor = Data.Target.AbilityActorInfo->AvatarActor.Get();
 		TargetController = Data.Target.AbilityActorInfo->PlayerController.Get();
-		TargetCharacter = Cast<AMainCharacter>(TargetActor);
+		TargetCharacter = Cast<ARTSCharacter>(TargetActor);
 	}
 
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
@@ -74,7 +72,7 @@ void UAttributeSetBase::PostGameplayEffectExecute(const struct FGameplayEffectMo
 		// Get the Source actor
 		AActor* SourceActor = nullptr;
 		AController* SourceController = nullptr;
-		AMainCharacter* SourceCharacter = nullptr;
+		ARTSCharacter* SourceCharacter = nullptr;
 		if (Source && Source->AbilityActorInfo.IsValid() && Source->AbilityActorInfo->AvatarActor.IsValid())
 		{
 			SourceActor = Source->AbilityActorInfo->AvatarActor.Get();
@@ -89,11 +87,11 @@ void UAttributeSetBase::PostGameplayEffectExecute(const struct FGameplayEffectMo
 			// Use the controller to find the source pawn
 			if (SourceController)
 			{
-				SourceCharacter = Cast<AMainCharacter>(SourceController->GetPawn());
+				SourceCharacter = Cast<ARTSCharacter>(SourceController->GetPawn());
 			}
 			else
 			{
-				SourceCharacter = Cast<AMainCharacter>(SourceActor);
+				SourceCharacter = Cast<ARTSCharacter>(SourceActor);
 			}
 			if (Context.GetEffectCauser())
 			{
@@ -122,10 +120,6 @@ void UAttributeSetBase::PostGameplayEffectExecute(const struct FGameplayEffectMo
 
 			if (TargetCharacter)
 			{
-				// This is proper damage
-				/*if (TargetCharacter->covere)
-				{
-				}*/
 				TargetCharacter->HandleDamage(LocalDamageDone, HitResult, SourceTags, SourceCharacter, SourceActor);
 
 				// Call for all health changes
@@ -135,16 +129,10 @@ void UAttributeSetBase::PostGameplayEffectExecute(const struct FGameplayEffectMo
 	}
 	else if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
-		// Handle other health changes such as from healing or direct modifiers
-		// First clamp it
 		SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
-
-		if (TargetCharacter)
-		{
-			// Call for all health changes
-			TargetCharacter->HandleHealthChanged(DeltaValue, SourceTags);
-		}
 	}
+
+
 	//else if (Data.EvaluatedData.Attribute == GetStatminaAttribute())
 	//{
 	//	// Clamp mana

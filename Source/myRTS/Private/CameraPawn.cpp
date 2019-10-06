@@ -29,7 +29,6 @@ ACameraPawn::ACameraPawn()
 void ACameraPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	PlayerController = Cast<ARTSPlayerController>(GetController());
 }
 
 // Called every frame
@@ -54,7 +53,7 @@ void ACameraPawn::Tick(float DeltaTime)
 				const float xZone = screenWidth * ScreenEdgeZonePercent / 100;
 				const float yZone = screenHeight * ScreenEdgeZonePercent / 100;
 
-				FVector Direction;
+				FVector Direction(0, 0, 0);
 
 				if (mouseLocation.X < xZone)							Direction = FVector((FVector::LeftVector));
 				else if (mouseLocation.X > screenWidth - xZone)		    Direction = FVector((FVector::RightVector));
@@ -74,20 +73,20 @@ void ACameraPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	PlayerInputComponent->BindAxis("MoveForward", this, &ACameraPawn::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ACameraPawn::MoveRight);
-	PlayerInputComponent->BindAxis("Mouse Wheel", this, &ACameraPawn::Zoom);
+	//PlayerInputComponent->BindAxis("MouseWheel", this, &ACameraPawn::Zoom);
 }
 
 //void ACameraPawnRTS::Tick(float DeltaTime)
 //{
 //	
 //}
-void ACameraPawn::Zoom(float magnitude)
-{
-	if (magnitude != 0 && Controller)
-	{
-
-	}
-}
+//void ACameraPawn::Zoom(float magnitude)
+//{
+//	if (magnitude != 0 && Controller)
+//	{
+//
+//	}
+//}
 
 void ACameraPawn::MoveForward(float Val)
 {

@@ -2,7 +2,7 @@
 
 
 #include "BTT_Attack.h"
-#include "MainCharacter.h"
+#include "RTSCharacter.h"
 #include <BehaviorTree/BehaviorTreeComponent.h>
 #include <BrainComponent.h>
 #include <GameFramework/Controller.h>
@@ -18,14 +18,14 @@
 EBTNodeResult::Type UBTT_Attack::ExecuteTask(UBehaviorTreeComponent & OwnerComp, uint8 * NodeMemory)
 {
 	AActor *OwnerPawn = OwnerComp.GetAIOwner()->GetPawn();
-	AMainCharacter *MainCharacter = Cast<AMainCharacter>(OwnerPawn);
+	ARTSCharacter *MainCharacter = Cast<ARTSCharacter>(OwnerPawn);
 
 	if (MainCharacter)
 	{	
 		UObject *Object= OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Object>(Enemy.GetSelectedKeyID());
 		if (Object!=nullptr)
 		{
-			AMainCharacter *TargetMainCharacter = Cast<AMainCharacter>(Object);
+			ARTSCharacter *TargetMainCharacter = Cast<ARTSCharacter>(Object);
 		}
 		return EBTNodeResult::Failed;
 	}

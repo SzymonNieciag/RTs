@@ -2,7 +2,7 @@
 
 
 #include "MainCharacterController.h"
-#include "MainCharacter.h"
+#include "RTSCharacter.h"
 #include <AIController.h>
 #include <BehaviorTree/BlackboardComponent.h>
 #include <BehaviorTree/BehaviorTree.h>
@@ -35,24 +35,16 @@ void AMainCharacterController::OnPossess(APawn * InPawn)
 		AmyRTSGameMode* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
 		RTSGameMode->AllPawns.Add(this->GetPawn());
 	}
-
-	AMainCharacter *MainCharacter = Cast<AMainCharacter>(InPawn);
-	if (MainCharacter->BehaviorTree->BlackboardAsset)
-	{
-		//Initialize the blackboard values
-		Blackboard->InitializeBlackboard(*MainCharacter->BehaviorTree->BlackboardAsset);
-	}
 }
 
 bool AMainCharacterController::RunBehaviorTree(UBehaviorTree * BTAsset)
 {
 	Super::RunBehaviorTree(BTAsset);
 
-	AMainCharacter* MainCharacter = Cast<AMainCharacter>(GetPawn());
+	ARTSCharacter* MainCharacter = Cast<ARTSCharacter>(GetPawn());
 	if (MainCharacter)
 	{
 		MainCharacter->BehaviorTree = BTAsset;
-		//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("sdgsgdgd ")));
 		return true;
 	}
 	return false;
@@ -73,7 +65,7 @@ void AMainCharacterController::OnMoveCompleted(FAIRequestID RequestID, const FPa
 {
 	Super::OnMoveCompleted(RequestID, Result);
 	this->GetBlackboardComponent()->SetValueAsBool("PriorityOrder", false);
-	AMainCharacter *MainCharacter = Cast<AMainCharacter>(GetPawn());
+	ARTSCharacter *MainCharacter = Cast<ARTSCharacter>(GetPawn());
 
 	if (MainCharacter)
 	{
@@ -94,7 +86,6 @@ void AMainCharacterController::OnMoveCompleted(FAIRequestID RequestID, const FPa
 			}
 		}
 	}
-
 	OnStopMovement.Broadcast(MainCharacter);
 }
 
@@ -103,7 +94,7 @@ void AMainCharacterController::MoveToLocationRTS(FVector Destination)
 	MoveToLocation(Destination, 30, true, true, false);
 
 	this->GetBlackboardComponent()->SetValueAsBool("PriorityOrder", true);
-	AMainCharacter *MainCharacter = Cast<AMainCharacter>(GetPawn());
+	ARTSCharacter *MainCharacter = Cast<ARTSCharacter>(GetPawn());
 
 	if (MainCharacter && MainCharacter->CoverPoint)
 	{
@@ -113,7 +104,7 @@ void AMainCharacterController::MoveToLocationRTS(FVector Destination)
 
 FAIRequestID AMainCharacterController::RequestMove(const FAIMoveRequest& MoveRequest, FNavPathSharedPtr Path)
 {
-	AMainCharacter *MainCharacter = Cast<AMainCharacter>(GetPawn());
+	ARTSCharacter *MainCharacter = Cast<ARTSCharacter>(GetPawn());
 	if (MainCharacter && MainCharacter->CoverPoint)
 	{
 		MainCharacter->LeaveTheCover();

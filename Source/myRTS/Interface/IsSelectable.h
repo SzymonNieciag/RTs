@@ -23,7 +23,11 @@ class MYRTS_API IIsSelectable
 public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Decal")
-		void EnableDecalEffect();
+		void EnableSelectedDecal();
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Decal")
-		void DisableDecalEffect();
+		void DisableSelectedDecal();
+
+	/* ReTrigger Decal and hold him active while time is not expires*/
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Decal")
+		void ReTriggerPreviewDecal();
 };

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
-#include "MainCharacter.h"
+#include "RTSCharacter.h"
 #include "RTSHud.generated.h"
 
 /**
@@ -27,5 +27,16 @@ public:
 
 	bool bStartingSelecting = false;
 
-	TArray<AMainCharacter*> SelectedActors;
+	TArray<ARTSCharacter*> SelectedCharacters;
+
+	TArray<AActor*> SelectedActors;
+
+	/**
+	* Returns the array of actors inside, with a class filter.
+	* @param InActors					Actors that should be filtred
+	* @return OutActors					The actors according to selection rule
+	*/
+	template <typename ClassFilter>
+	bool GetSpecificActorsByFilter(const TArray<AActor*>InActors, TArray<ClassFilter*>& OutActors);
 };
+

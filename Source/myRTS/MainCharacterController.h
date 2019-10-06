@@ -10,7 +10,7 @@
 /**
  * 
  */
-class AMainCharacter;
+class ARTSCharacter;
 
 UENUM(BlueprintType)
 enum class ETeamType :uint8

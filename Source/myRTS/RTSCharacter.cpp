@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MainCharacter.h"
+#include "RTSCharacter.h"
 #include <Blueprint/AIBlueprintHelperLibrary.h>
 #include <Components/StaticMeshComponent.h>
 #include <GameFramework/Character.h>
@@ -16,8 +16,8 @@
 #include <DrawDebugHelpers.h>
 
 // Sets default values
-AMainCharacter::AMainCharacter()
-	:CoverPoint(nullptr)
+ARTSCharacter::ARTSCharacter()
+	:CoverPoint(nullptr), IsDead(false)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -31,7 +31,7 @@ AMainCharacter::AMainCharacter()
 }
 
 // Called when the game starts or when spawned
-void AMainCharacter::BeginPlay()
+void ARTSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -41,7 +41,7 @@ void AMainCharacter::BeginPlay()
 	//AttributeSetBase->OnHealtChange.AddDynamic(this, &AMainCharacter::HandleHealthChanged);
 }
 
-bool AMainCharacter::IsAlive()
+bool ARTSCharacter::IsAlive()
 {
 	if (GetHealth()>0)
 	{
@@ -53,35 +53,39 @@ bool AMainCharacter::IsAlive()
 	}
 }
 
-void AMainCharacter::EnableDecalEffect_Implementation()
+void ARTSCharacter::EnableSelectedDecal_Implementation()
 {
 
 }
 
-void AMainCharacter::DisableDecalEffect_Implementation()
+void ARTSCharacter::DisableSelectedDecal_Implementation()
 {
 
 }
 
-UAbilitySystemComponent * AMainCharacter::GetAbilitySystemComponent() const
+void ARTSCharacter::ReTriggerPreviewDecal_Implementation()
+{
+}
+
+UAbilitySystemComponent * ARTSCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
 }
 
-void AMainCharacter::Tick(float DeltaTime)
+void ARTSCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
 // Called to bind functionality to input
-void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void ARTSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 }
 
-void AMainCharacter::AquireAbility(TSubclassOf<UGameplayAbility> AbilityToAquire)
+void ARTSCharacter::AquireAbility(TSubclassOf<UGameplayAbility> AbilityToAquire)
 {
 	if (AbilitySystemComponent)
 	{
@@ -93,54 +97,55 @@ void AMainCharacter::AquireAbility(TSubclassOf<UGameplayAbility> AbilityToAquire
 	}
 }
 
-void AMainCharacter::HandleDamage(float DamageAmount, const FHitResult & HitInfo, const FGameplayTagContainer & DamageTags, AMainCharacter * InstigatorPawn, AActor * DamageCauser)
+void ARTSCharacter::HandleDamage(float DamageAmount, const FHitResult & HitInfo, const FGameplayTagContainer & DamageTags, ARTSCharacter * InstigatorPawn, AActor * DamageCauser)
 {
 	OnDamaged(DamageAmount, HitInfo, DamageTags, InstigatorPawn, DamageCauser);
 }
 
-void AMainCharacter::HandleHealthChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags)
+void ARTSCharacter::HandleHealthChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags)
 {
 	OnHealtChanged(DeltaValue, EventTags);
 
-	if (!IsAlive())
+	if (!IsAlive() && !IsDead)
 	{
+		IsDead = true;
 		AmyRTSGameMode* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
 		RTSGameMode->AllPawns.Remove(this);
 		HandleDeath();
 	}
 }
 
-void AMainCharacter::HandleDeath()
+void ARTSCharacter::HandleDeath()
 {
 	LeaveTheCover();
 	OnDeath();
 }
 
-float AMainCharacter::GetHealth() const
+float ARTSCharacter::GetHealth() const
 {
 	return AttributeSetBase->GetHealth();
 }
 
-float AMainCharacter::GetMaxHealth() const
+float ARTSCharacter::GetMaxHealth() const
 {
 	return AttributeSetBase->GetMaxHealth();
 }
 
-float AMainCharacter::GetStamina() const
+float ARTSCharacter::GetStamina() const
 {
 	return AttributeSetBase->GetStatmina();
 }
 
-float AMainCharacter::GetMaxStamina() const
+float ARTSCharacter::GetMaxStamina() const
 {
 	return AttributeSetBase->GetMaxStamina();
 }
 
-float AMainCharacter::CalculateChanceToHitTarget(AActor *TargetActor)
+float ARTSCharacter::CalculateChanceToHitTarget(AActor *TargetActor)
 {
 	if (Weapon)
 	{
-		AMainCharacter *TargetMainCharacter = Cast<AMainCharacter>(TargetActor);
+		ARTSCharacter *TargetMainCharacter = Cast<ARTSCharacter>(TargetActor);
 		//if (!TargetMainCharacter)
 		//	return 0.0f;
 		ACoverGoalPoint *TargetCoverPoint = TargetMainCharacter->CoverPoint;
@@ -160,9 +165,9 @@ float AMainCharacter::CalculateChanceToHitTarget(AActor *TargetActor)
 
 			DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 5);
 
-			if (GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_EngineTraceChannel1, CollisionParams))
+			if (GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, COLLISION_PROJECTILE, CollisionParams))
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("The Component Being Hit is: %s"), *OutHit.GetComponent()->GetName()));
+				GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("The Component Being Hit is: %s"), *OutHit.GetComponent()->GetName())); //dzia.³a
 			}
 			DrawDebugSphere(GetWorld(), TargetCoverPoint->GetActorLocation(), 160, 3, FColor::Blue, false, 3.0f, 25.0f);
 			return TargetCoverPoint->CoverData.ReduceChanceToHit * Weapon->CalculateWeaponAccuracyAtDistance(this->GetDistanceTo(TargetActor));
@@ -175,12 +180,12 @@ float AMainCharacter::CalculateChanceToHitTarget(AActor *TargetActor)
 	return 0.0f;
 }
 
-bool AMainCharacter::IsCovered()
+bool ARTSCharacter::IsCovered()
 {
 	return CheckCoverPoint(CoverPoint);
 }
 
-bool AMainCharacter::CheckCoverPoint(ACoverGoalPoint* CoverGoalPoint)
+bool ARTSCharacter::CheckCoverPoint(ACoverGoalPoint* CoverGoalPoint)
 {
 	if (CoverGoalPoint)
 	{
@@ -196,7 +201,7 @@ bool AMainCharacter::CheckCoverPoint(ACoverGoalPoint* CoverGoalPoint)
 	return false;
 }
 
-bool AMainCharacter::LeaveTheCover()
+bool ARTSCharacter::LeaveTheCover()
 {
 	if (CoverPoint)
 	{
@@ -207,7 +212,7 @@ bool AMainCharacter::LeaveTheCover()
 	return false;
 }
 
-bool AMainCharacter::GetCooldownRemainingForTag(FGameplayTagContainer CooldownTags, float& TimeRemaining, float& CooldownDuration)
+bool ARTSCharacter::GetCooldownRemainingForTag(FGameplayTagContainer CooldownTags, float& TimeRemaining, float& CooldownDuration)
 {
 	if (AbilitySystemComponent && CooldownTags.Num() > 0)
 	{
@@ -238,7 +243,7 @@ bool AMainCharacter::GetCooldownRemainingForTag(FGameplayTagContainer CooldownTa
 	return false;
 }
 
-void AMainCharacter::Destroyed()
+void ARTSCharacter::Destroyed()
 {
 	Super::Destroyed();
 

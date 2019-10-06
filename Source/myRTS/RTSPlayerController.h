@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "MainCharacter.h"
+#include "RTSCharacter.h"
 #include "RTSPlayerController.generated.h"
 
 UCLASS()
@@ -19,6 +19,9 @@ public:
 	class ARTSHud *HUDPtr;
 
 	TArray<AUnitsSquad*> SelectedSquads;
+
+	UPROPERTY(BlueprintReadOnly, Category = "AI|Units")
+	TArray<ARTSCharacter*> ControlledMainCharacters;
 
 protected:
 

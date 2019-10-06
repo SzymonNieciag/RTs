@@ -13,7 +13,7 @@
 #include <BehaviorTree/Blackboard/BlackboardKeyType_Object.h>
 #include <BehaviorTree/BlackboardComponent.h>
 #include <DrawDebugHelpers.h>
-#include "MainCharacter.h"
+#include "RTSCharacter.h"
 
 void UBTS_CoverPerception::OnBecomeRelevant(UBehaviorTreeComponent & OwnerComp, uint8 * NodeMemory)
 {
@@ -53,14 +53,14 @@ void UBTS_CoverPerception::InitializeFromAsset(UBehaviorTree& Asset)
 
 void UBTS_CoverPerception::SearchCoverActors(UBehaviorTreeComponent& OwnerComp)
 {
-	AMainCharacter* MainCharacter = Cast<AMainCharacter>(OwnerComp.GetAIOwner()->GetPawn());
+	ARTSCharacter* MainCharacter = Cast<ARTSCharacter>(OwnerComp.GetAIOwner()->GetPawn());
 	if (!MainCharacter->IsCovered())
 	{
 		UObject* Object = OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Object>(Enemy.GetSelectedKeyID());
-		AMainCharacter* Enemy = nullptr;
+		ARTSCharacter* Enemy = nullptr;
 		if (Object)
 		{
-			Enemy = Cast<AMainCharacter>(Object);
+			Enemy = Cast<ARTSCharacter>(Object);
 		}
 		if (Enemy)
 		{
@@ -106,7 +106,7 @@ void UBTS_CoverPerception::SearchCoverActors(UBehaviorTreeComponent& OwnerComp)
 	}
 }
 
-void UBTS_CoverPerception::GetCoverPointsInRange(AMainCharacter *OwnerPawn, TArray<ACoverGoalPoint*> &OutActors, float Range)
+void UBTS_CoverPerception::GetCoverPointsInRange(ARTSCharacter *OwnerPawn, TArray<ACoverGoalPoint*> &OutActors, float Range)
 {
 	auto* RTSGameMode = (AmyRTSGameMode*)GetWorld()->GetAuthGameMode();
 	for (ACoverGoalPoint *CoverActor : RTSGameMode->AllCoverActors)

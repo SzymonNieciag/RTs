@@ -3,7 +3,7 @@
 #include "Abilities/RTSDamageExecution.h"
 #include "Abilities/AttributeSetBase.h"
 #include "AbilitySystemComponent.h"
-#include "MainCharacter.h"
+#include "RTSCharacter.h"
 
 struct RTSDamageStatics
 {
@@ -48,8 +48,8 @@ void URTSDamageExecution::Execute_Implementation(const FGameplayEffectCustomExec
 	AActor* SourceActor = SourceAbilitySystemComponent ? SourceAbilitySystemComponent->AvatarActor : nullptr;
 	AActor* TargetActor = TargetAbilitySystemComponent ? TargetAbilitySystemComponent->AvatarActor : nullptr;
 
-	AMainCharacter* SourceMainCharacter = SourceAbilitySystemComponent ? Cast<AMainCharacter>(SourceActor) : nullptr;
-	AMainCharacter* TargetMainCharacter = TargetAbilitySystemComponent ? Cast<AMainCharacter>(TargetActor) : nullptr;
+	ARTSCharacter* SourceMainCharacter = SourceAbilitySystemComponent ? Cast<ARTSCharacter>(SourceActor) : nullptr;
+	ARTSCharacter* TargetMainCharacter = TargetAbilitySystemComponent ? Cast<ARTSCharacter>(TargetActor) : nullptr;
 
 	const FGameplayEffectSpec& Spec = ExecutionParams.GetOwningSpec();
 

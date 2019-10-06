@@ -19,7 +19,7 @@ public:
 	AmyRTSGameMode();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Units")
-		TArray<AActor*> AllPawns;
+		TArray<APawn*> AllPawns;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Units")
 		TArray<ACoverGoalPoint*> AllCoverActors;

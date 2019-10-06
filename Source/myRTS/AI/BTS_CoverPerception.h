@@ -11,21 +11,21 @@
  * 
  */
 class ACoverGoalPoint;
-class AMainCharacter;
+class ARTSCharacter;
 
 UCLASS()
 class MYRTS_API UBTS_CoverPerception : public UBTService
 {
 	GENERATED_BODY()
 	
+public:
+
 	/*Enemy Actor*/
 	UPROPERTY(EditAnywhere, Category = Blackboard)
 		struct FBlackboardKeySelector Enemy;
 	UPROPERTY(EditAnywhere, Category = Blackboard)
 		struct FBlackboardKeySelector Goal;
-protected:
 
-public:
 	/** called when auxiliary node becomes active
 	* this function should be considered as const (don't modify state of object) if node is not instanced! */
 	virtual void OnBecomeRelevant(UBehaviorTreeComponent &OwnerComp, uint8 *NodeMemory) override;
@@ -41,7 +41,7 @@ public:
 	/* Search Closest CoversBaseActors and if Enemy is Valid additional scaning safe location*/
 	void SearchCoverActors(UBehaviorTreeComponent & OwnerComp);
 
-	void GetCoverPointsInRange(AMainCharacter *OwnerPawn, TArray<ACoverGoalPoint*> &OutActors, float Range);
+	void GetCoverPointsInRange(ARTSCharacter *OwnerPawn, TArray<ACoverGoalPoint*> &OutActors, float Range);
 
 	virtual void InitializeFromAsset(UBehaviorTree &Asset) override;
 

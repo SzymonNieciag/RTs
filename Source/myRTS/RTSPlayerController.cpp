@@ -7,7 +7,7 @@
 #include "RTSHud.h"
 #include <AI/NavigationSystemBase.h>
 #include <DrawDebugHelpers.h>
-#include "MainCharacter.h"
+#include "RTSCharacter.h"
 #include "MainCharacterController.h"
 #include <NavigationSystem.h>
 
@@ -18,9 +18,12 @@ enum EDirection
 
 ARTSPlayerController::ARTSPlayerController()
 {
+	PrimaryActorTick.bCanEverTick = true;
+
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
 }
+
 
 void ARTSPlayerController::SetupInputComponent()
 {
@@ -38,17 +41,20 @@ void ARTSPlayerController::SelectionPressed()
 {
 	if (HUDPtr != nullptr)
 	{
-		for (AActor* Actor : HUDPtr->SelectedActors)
+		//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("staaaaaaaaaaaaaop ")));
+		for (ARTSCharacter* MainCharacter : ControlledMainCharacters)
 		{
-			if (IIsSelectable* TheInterface = Cast<IIsSelectable>(Actor))
+			if ( IIsSelectable* TheInterface = Cast<IIsSelectable>(MainCharacter))
 			{
-				//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("stop ")));
-				IIsSelectable::Execute_DisableDecalEffect(Actor);
+				
+				IIsSelectable::Execute_DisableSelectedDecal(MainCharacter);
 			}
 		}
 		HUDPtr->bStartingSelecting = true;
 		//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("start ")));
 		HUDPtr->InitialPoint = HUDPtr->GetMousePos2D();
+
+		ControlledMainCharacters.Empty();
 	}
 }
 
@@ -57,11 +63,12 @@ void ARTSPlayerController::SelectionRelased()
 	if (HUDPtr != nullptr)
 	{
 		HUDPtr->bStartingSelecting = false;
-		for (AActor* Actor : HUDPtr->SelectedActors)
+		for (ARTSCharacter* MainCharacter : HUDPtr->SelectedCharacters)
 		{
-			if (IIsSelectable* TheInterface = Cast<IIsSelectable>(Actor))
+			ControlledMainCharacters.Add(MainCharacter);
+			if (IIsSelectable* TheInterface = Cast<IIsSelectable>(MainCharacter))
 			{
-				IIsSelectable::Execute_EnableDecalEffect(Actor);
+				IIsSelectable::Execute_EnableSelectedDecal(MainCharacter);
 			}
 		}
 	}
@@ -69,13 +76,17 @@ void ARTSPlayerController::SelectionRelased()
 
 void ARTSPlayerController::MoveReleased()
 {
-	if (HUDPtr->SelectedActors.Num() != 0)
+	if (ControlledMainCharacters.Num() != 0)
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("start %d"), ControlledMainCharacters.Num()));
+
 		if (UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld()))
 		{
 			if (ANavigationData* NavData = NavSys->GetDefaultNavDataInstance(FNavigationSystem::DontCreate))
 			{
-				int32 MaxIndex = HUDPtr->SelectedActors.Num();
+				int32 MaxIndex = ControlledMainCharacters.Num();
+
+				///////////////////
 				FHitResult HitResult;
 				GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, false, HitResult);
 
@@ -89,8 +100,7 @@ void ARTSPlayerController::MoveReleased()
 				int32 MaxNumberofProbes = MaxIndex;
 				int32 PawnTurn = 0;
 
-				AMainCharacter *MainCharacter = Cast<AMainCharacter>(HUDPtr->SelectedActors[PawnTurn]);
-				float UnitSize = MainCharacter->NavLocationSize;
+				float UnitSize = ControlledMainCharacters[PawnTurn]->GetNavLocationSize();
 
 				///////////////////
 				FVector CheckLocation = FVector(LocationX, LocationY, HitResult.Location.Z);
@@ -99,14 +109,12 @@ void ARTSPlayerController::MoveReleased()
 				// Check ProjectPoint if he is moveable. Don't setup FVector(0,0,0)!.
 				if (UNavigationSystemV1::K2_ProjectPointToNavigation(GetWorld(), CheckLocation, DestinationLocation, NavData, nullptr, FVector(50, 50, 50)))
 				{
-					AMainCharacterController *MainCharacterController = Cast<AMainCharacterController>(HUDPtr->SelectedActors[0]->GetController());
-					if (MainCharacterController)
+					if (AMainCharacterController *MainCharacterController = Cast<AMainCharacterController>(ControlledMainCharacters[0]->GetController()))
 					{
 						MainCharacterController->MoveToLocationRTS(DestinationLocation);
+
+						DrawDebugSphere(GetWorld(), CheckLocation, 25, 10, FColor::Blue, false, 5);
 					}
-
-					DrawDebugSphere(GetWorld(), CheckLocation, 25, 10, FColor::Blue, 3, 5);
-
 					PawnTurn++;
 				}
 				else
@@ -164,25 +172,21 @@ void ARTSPlayerController::MoveReleased()
 
 					if (UNavigationSystemV1::K2_ProjectPointToNavigation(GetWorld(), CheckLocation, DestinationLocation, NavData, nullptr, FVector(50, 50, 50)))
 					{
-						AMainCharacterController *MainCharacterController = Cast<AMainCharacterController>(HUDPtr->SelectedActors[PawnTurn]->GetController());
-						if (MainCharacterController)
+						if (AMainCharacterController *MainCharacterController = Cast<AMainCharacterController>(ControlledMainCharacters[PawnTurn]->GetController()))
 						{
 							MainCharacterController->MoveToLocationRTS(DestinationLocation);
-							DrawDebugSphere(GetWorld(), DestinationLocation, 25, 10, FColor::Green, 3, 5);
+							DrawDebugSphere(GetWorld(), DestinationLocation, 25, 10, FColor::Green, false, 2.0f);
 
 							PawnTurn++;
 						}
 						else
 						{
-							//UE_LOG(LogTemp, Fatal, TEXT("Brak kontrollera %s"), Cast<AMainCharacterController>(HUDPtr->SelectedActors[PawnTurn],GetName());
+							PawnTurn++;
 						}
-
-
-
 					}
 					else
 					{
-						DrawDebugSphere(GetWorld(), DestinationLocation, 25, 10, FColor::Blue, 3, 5);
+						DrawDebugSphere(GetWorld(), DestinationLocation, 25, 10, FColor::Blue, false, 2.0f);
 						MaxNumberofProbes++;
 					}
 				}

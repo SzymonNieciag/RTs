@@ -5,7 +5,7 @@
 #include "myRTSGameMode.h"
 #include <Components/SceneComponent.h>
 #include "MainCharacterController.h"
-#include "MainCharacter.h"
+#include "RTSCharacter.h"
 
 // Sets default values
 ACoverGoalPoint::ACoverGoalPoint()
@@ -30,7 +30,7 @@ void ACoverGoalPoint::SetDestinateTargetActor(APawn* Pawn)
 void ACoverGoalPoint::RemoveDestinateActor(APawn* Pawn)
 {
 	AMainCharacterController* MainCharacterController = Cast<AMainCharacterController>(Pawn->GetController());
-	AMainCharacter* MainCharacter = Cast<AMainCharacter>(Pawn);
+	ARTSCharacter* MainCharacter = Cast<ARTSCharacter>(Pawn);
 	if (!MainCharacter->IsCovered())
 	{
 		MainCharacterController->OnStopMovement.RemoveDynamic(this, &ACoverGoalPoint::RemoveDestinateActor);

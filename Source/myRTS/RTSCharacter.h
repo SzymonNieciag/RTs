@@ -10,7 +10,7 @@
 #include <../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/AbilitySystemInterface.h>
 #include <../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/Abilities/GameplayAbility.h>
 #include "Item/Weapon.h"
-#include "MainCharacter.generated.h"
+#include "RTSCharacter.generated.h"
 
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTakeRTSDamageSignature, float, DeltaValue, const struct FGameplayTagContainer&, EventTags);
 
@@ -18,14 +18,17 @@ class UAttributeSetBase;
 class ACoverGoalPoint;
 
 #define SafeSqrDistance 10000.0f
+#define COLLISION_PROJECTILE ECC_GameTraceChannel1
+
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeathDelegate, class AMainCharacter*, MainCharacter);
 
 UCLASS()
-class MYRTS_API AMainCharacter : public ACharacter, public IIsSelectable, public IAbilitySystemInterface
+class MYRTS_API ARTSCharacter : public ACharacter, public IIsSelectable, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 public:
 	// Sets default values for this character's properties
-	AMainCharacter();
+	ARTSCharacter();
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -53,7 +56,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
 		bool GetCooldownRemainingForTag(FGameplayTagContainer CooldownTags, float & TimeRemaining, float & CooldownDuration);
-
 	/**
 	* Called when character takes damage, which may have killed them
 	*
@@ -64,7 +66,7 @@ public:
 	* @param DamageCauser The actual actor that did the damage, might be a weapon or projectile
 	*/
 	UFUNCTION(BlueprintImplementableEvent)
-		void OnDamaged(float DamageAmount, const FHitResult& HitInfo, const struct FGameplayTagContainer& DamageTags, AMainCharacter* InstigatorCharacter, AActor* DamageCauser);
+		void OnDamaged(float DamageAmount, const FHitResult& HitInfo, const struct FGameplayTagContainer& DamageTags, ARTSCharacter* InstigatorCharacter, AActor* DamageCauser);
 	/**
 	* Called when health is changed, either from healing or from being damaged
 	* For damage this is called in addition to OnDamaged/OnKilled
@@ -76,12 +78,15 @@ public:
 		void OnHealtChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags);
 
 	// Called from RPGAttributeSet, these call BP events above
-		void HandleDamage(float DamageAmount, const FHitResult& HitInfo, const struct FGameplayTagContainer& DamageTags, AMainCharacter* InstigatorPawn, AActor* DamageCauser);
+		void HandleDamage(float DamageAmount, const FHitResult& HitInfo, const struct FGameplayTagContainer& DamageTags, ARTSCharacter* InstigatorPawn, AActor* DamageCauser);
 		void HandleHealthChanged(float DeltaValue, const struct FGameplayTagContainer& EventTags);
 		void HandleDeath();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "CharacterBase", meta = (DisplayName = "Character"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "CharacterBase", meta = (DisplayName = "OnDeath"))
 		void OnDeath();
+
+	//UPROPERTY(BlueprintAssignable)
+	//FOnDeathDelegate OnDeathh;
 
 	/** Returns current health, will be 0 if dead */
 	UFUNCTION(BlueprintCallable, Category = "Damage")
@@ -129,9 +134,7 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Items|Weapon")
 		AWeapon *Weapon;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Navigation")
-		float NavLocationSize = 100;
-
+	/* Return IsAlive private parametr */
 	UFUNCTION(BlueprintCallable, Category = "AI")
 		bool IsAlive();
 
@@ -139,17 +142,34 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon|Damage")
 		float CalculateChanceToHitTarget(AActor *TargetActor);
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Decal")
-		void EnableDecalEffect();  
-	virtual void EnableDecalEffect_Implementation() override;
+private:
+
+		bool IsDead;
+
+		UPROPERTY(EditDefaultsOnly, Category = "Navigation")
+		float NavLocationSize = 100;
+
+public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Decal")
-		void DisableDecalEffect();
-	virtual void DisableDecalEffect_Implementation() override;
+		void EnableSelectedDecal();
+	virtual void EnableSelectedDecal_Implementation() override;
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Decal")
+		void DisableSelectedDecal();
+	virtual void DisableSelectedDecal_Implementation() override;
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Decal")
+		void ReTriggerPreviewDecal();
+	virtual void ReTriggerPreviewDecal_Implementation() override;
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const;
 
+	UFUNCTION(BlueprintCallable, Category = "AI")
+	float GetNavLocationSize() { return NavLocationSize; }
+
 	virtual void Destroyed() override;
+
 };
 
 

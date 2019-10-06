@@ -37,8 +37,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	class USpringArmComponent* CameraBoom;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-	APlayerController* PlayerController;
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+	//APlayerController* PlayerController;
 
 	void Zoom(float Val);
 	void MoveForward(float Val) override;
