@@ -18,7 +18,7 @@ void ACoverGoalPoint::SetDestinateTargetActor(APawn* Pawn)
 	if (Pawn)
 	{
 		AMainCharacterController* MainCharacterController = Cast<AMainCharacterController>(Pawn->GetController());
-		MainCharacterController->OnStopMovement.AddDynamic(this, &ACoverGoalPoint::RemoveDestinateActor);
+		//MainCharacterController->OnStopMovement.AddDynamic(this, &ACoverGoalPoint::RemoveDestinateActor);
 		CoverData.DestinateTargetPawn = Pawn;
 	}
 	else

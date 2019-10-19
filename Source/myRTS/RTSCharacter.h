@@ -140,7 +140,8 @@ public:
 
 	/* Calculation of the total accuracy allowing to hit the target */
 	UFUNCTION(BlueprintCallable, Category = "Weapon|Damage")
-		float CalculateChanceToHitTarget(AActor *TargetActor);
+		float CalculateChanceToHitTarget(AActor *TargetActor, FHitResult& OutHit);
+	
 
 private:
 

@@ -77,11 +77,10 @@ void AMainCharacterController::OnMoveCompleted(FAIRequestID RequestID, const FPa
 				if (MainCharacter->CheckCoverPoint(CoverActorPoint))
 				{
 					MainCharacter->CoverPoint = CoverActorPoint;
-					DrawDebugSphere(GetWorld(), MainCharacter->CoverPoint->GetActorLocation(), 40, 3, FColor::Red, false, 3.0f, 25.0f);
 				}
 				else
 				{
-					MainCharacter->CoverPoint = nullptr;
+					MainCharacter->LeaveTheCover(); 
 				}
 			}
 		}
@@ -109,7 +108,6 @@ FAIRequestID AMainCharacterController::RequestMove(const FAIMoveRequest& MoveReq
 	{
 		MainCharacter->LeaveTheCover();
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("wyjscie z covera")));
-
 	}
 	return Super::RequestMove(MoveRequest, Path);
 }

@@ -14,6 +14,8 @@
 #include <AIController.h>
 #include "Environment/CoverGoalPoint.h"
 #include <DrawDebugHelpers.h>
+#include "MainCharacterController.h"
+#include <BehaviorTree/BlackboardComponent.h>
 
 // Sets default values
 ARTSCharacter::ARTSCharacter()
@@ -141,7 +143,7 @@ float ARTSCharacter::GetMaxStamina() const
 	return AttributeSetBase->GetMaxStamina();
 }
 
-float ARTSCharacter::CalculateChanceToHitTarget(AActor *TargetActor)
+float ARTSCharacter::CalculateChanceToHitTarget(AActor *TargetActor, FHitResult& OutHit)
 {
 	if (Weapon)
 	{
@@ -152,32 +154,31 @@ float ARTSCharacter::CalculateChanceToHitTarget(AActor *TargetActor)
 
 		if (TargetCoverPoint) 
 		{
-			FHitResult OutHit;
 			FVector Start = TargetMainCharacter->GetActorLocation();
-
-			Start.Z += 50.f;
 
 			FVector Direction = this->GetActorLocation() - TargetMainCharacter->GetActorLocation();
 			Direction.Normalize(0.1);
-			FVector End = ((Direction * 300.f) + Start);
+			FVector End = ((Direction * 150.f) + Start);
 
 			FCollisionQueryParams CollisionParams;
 
-			DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 5);
+			GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, COLLISION_PROJECTILE, CollisionParams);
 
-			if (GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, COLLISION_PROJECTILE, CollisionParams))
+			if (OutHit.bBlockingHit)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("The Component Being Hit is: %s"), *OutHit.GetComponent()->GetName())); //dzia.³a
+				return TargetCoverPoint->CoverData.ReduceChanceToHit * Weapon->CalculateWeaponAccuracyAtDistance(this->GetDistanceTo(TargetActor));
 			}
-			DrawDebugSphere(GetWorld(), TargetCoverPoint->GetActorLocation(), 160, 3, FColor::Blue, false, 3.0f, 25.0f);
-			return TargetCoverPoint->CoverData.ReduceChanceToHit * Weapon->CalculateWeaponAccuracyAtDistance(this->GetDistanceTo(TargetActor));
+			else
+			{
+				return Weapon->CalculateWeaponAccuracyAtDistance(this->GetDistanceTo(TargetActor));
+			}
 		}
 		else
 		{
-			return Weapon->CalculateWeaponAccuracyAtDistance(this->GetDistanceTo(TargetActor));;
+			return Weapon->CalculateWeaponAccuracyAtDistance(this->GetDistanceTo(TargetActor));
 		}
 	}
-	return 0.0f;
+	return 1.0f;
 }
 
 bool ARTSCharacter::IsCovered()
@@ -205,6 +206,10 @@ bool ARTSCharacter::LeaveTheCover()
 {
 	if (CoverPoint)
 	{
+		if (AMainCharacterController* MainCharacterController = Cast<AMainCharacterController>(GetController()))
+		{
+			MainCharacterController->GetBlackboardComponent()->SetValueAsObject("Goal", nullptr);
+		}
 		CoverPoint->SetDestinateTargetActor(nullptr);
 		CoverPoint = nullptr;
 		return true;
